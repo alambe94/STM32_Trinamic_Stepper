@@ -32,11 +32,12 @@
 
 #include "TMC2130_Register.h"
 
+#include "TMC2130.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
 
 /* USER CODE END PTD */
 
@@ -67,91 +68,7 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-uint8_t TMC2130_Write_Register(uint8_t reg, uint32_t data)
-    {
 
-    uint8_t s;
-    uint8_t temp;
-
-    uint8_t cmd_w = 0x80 | reg;
-
-    HAL_GPIO_WritePin(SPI_CS_GPIO_Port, SPI_CS_Pin, GPIO_PIN_RESET);
-
-    HAL_SPI_TransmitReceive(&hspi1, &cmd_w, &s, 1, 100);
-
-    temp = ((data >> 24UL) & 0xFF);
-    HAL_SPI_Transmit(&hspi1, &temp, 1, 100);
-
-    temp = ((data >> 16UL) & 0xFF);
-    HAL_SPI_Transmit(&hspi1, &temp, 1, 100);
-
-    temp = ((data >> 8UL) & 0xFF);
-    HAL_SPI_Transmit(&hspi1, &temp, 1, 100);
-
-    temp = ((data >> 0UL) & 0xFF);
-    HAL_SPI_Transmit(&hspi1, &temp, 1, 100);
-
-    HAL_GPIO_WritePin(SPI_CS_GPIO_Port, SPI_CS_Pin, GPIO_PIN_SET);
-
-    return s;
-    }
-
-
-uint8_t TMC2130_Set_Read_Register(uint8_t reg)
-    {
-
-    uint8_t temp = 0x00;
-    uint8_t s;
-
-    HAL_GPIO_WritePin(SPI_CS_GPIO_Port, SPI_CS_Pin, GPIO_PIN_RESET);
-
-    HAL_SPI_TransmitReceive(&hspi1, &reg, &s, 1, 100);
-
-    HAL_SPI_Transmit(&hspi1, &temp, 1, 100);
-
-    HAL_SPI_Transmit(&hspi1, &temp, 1, 100);
-
-    HAL_SPI_Transmit(&hspi1, &temp, 1, 100);
-
-    HAL_SPI_Transmit(&hspi1, &temp, 1, 100);
-
-    HAL_GPIO_WritePin(SPI_CS_GPIO_Port, SPI_CS_Pin, GPIO_PIN_SET);
-
-    return s;
-
-    }
-
-uint8_t TMC2130_Read_Register(uint8_t reg, uint32_t *data)
-    {
-
-    uint8_t s;
-    uint8_t temp;
-    uint32_t val = 0;
-
-    TMC2130_Set_Read_Register(reg);
-
-    HAL_GPIO_WritePin(SPI_CS_GPIO_Port, SPI_CS_Pin, GPIO_PIN_RESET);
-
-    HAL_SPI_TransmitReceive(&hspi1, &reg, &s, 1, 100);
-
-    HAL_SPI_Receive(&hspi1, &temp, 1, 100);
-    val = temp << 24;
-
-    HAL_SPI_Receive(&hspi1, &temp, 1, 100);
-    val |= temp << 16;
-
-    HAL_SPI_Receive(&hspi1, &temp, 1, 100);
-    val |= temp << 8;
-
-    HAL_SPI_Receive(&hspi1, &temp, 1, 100);
-    val |= temp << 0;
-
-    *data = val;
-
-    HAL_GPIO_WritePin(SPI_CS_GPIO_Port, SPI_CS_Pin, GPIO_PIN_SET);
-
-    return s;
-    }
 
 
 void CLI_UART_Send_Char(char data)
@@ -182,17 +99,6 @@ void CLI_UART_Send_Int_Hex(int32_t num)
     CLI_UART_Send_String(int_to_str);
     }
 
-void TMC2130_Step_TIM_ISR()
-    {
-    static uint32_t pulse_count = 0;
-    HAL_GPIO_TogglePin(STEP_GPIO_Port, STEP_Pin);
-    pulse_count++;
-    if(pulse_count > 400000)
-	{
-	pulse_count = 0;
-	HAL_GPIO_TogglePin(DIR_GPIO_Port, DIR_Pin);
-	}
-    }
 /* USER CODE END 0 */
 
 /**
@@ -230,17 +136,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 
-  //set TMC2130 config
-  TMC2130_Write_Register(TMC2130_GCONF,      0x00000001UL);  //voltage on AIN is current reference
-  TMC2130_Write_Register(TMC2130_IHOLD_IRUN, 0x00001010UL);  //IHOLD=0x10, IRUN=0x10
-  TMC2130_Write_Register(TMC2130_CHOPCONF,   0x00008008UL);  //native 256 microsteps, MRES=0, TBL=1=24, TOFF=8
-
-
-  //outputs on (LOW active)
-  HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET);
-
-  HAL_TIM_Base_Start_IT(&htim11);
-
   /* USER CODE END 2 */
  
  
@@ -257,37 +152,7 @@ int main(void)
 	if (HAL_GetTick() - time_elapsed > 1000)
 	    {
 
-	    time_elapsed = HAL_GetTick();
 
-	    HAL_TIM_Base_Stop_IT(&htim11);
-
-	    s = TMC2130_Read_Register(TMC2130_IOIN, &data);
-
-	    CLI_UART_Send_String("TMC2130_IOIN:0x0");
-	    CLI_UART_Send_Int_Hex(data);
-	    CLI_UART_Send_String("\t");
-	    CLI_UART_Send_String("Status:0x");
-	    CLI_UART_Send_Int_Hex(s);
-
-	    if (s & 0x01)
-		{
-		CLI_UART_Send_String(" reset");
-		}
-	    else if (s & 0x02)
-		{
-		CLI_UART_Send_String(" error");
-		}
-	    else if (s & 0x04)
-		{
-		CLI_UART_Send_String(" sg2");
-		}
-	    else if (s & 0x08)
-		{
-		CLI_UART_Send_String(" standstill");
-		}
-	    CLI_UART_Send_String("\n");
-
-	    HAL_TIM_Base_Start_IT(&htim11);
 
 	    }
 
