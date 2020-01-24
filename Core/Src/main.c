@@ -97,14 +97,15 @@ uint8_t TMC2130_Write_Register(uint8_t reg, uint32_t data)
     }
 
 
-void TMC2130_Set_Read_Register(uint8_t reg)
+uint8_t TMC2130_Set_Read_Register(uint8_t reg)
     {
 
     uint8_t temp = 0x00;
+    uint8_t s;
 
     HAL_GPIO_WritePin(SPI_CS_GPIO_Port, SPI_CS_Pin, GPIO_PIN_RESET);
 
-    HAL_SPI_Transmit(&hspi1, &reg , 1, 100);
+    HAL_SPI_TransmitReceive(&hspi1, &reg, &s, 1, 100);
 
     HAL_SPI_Transmit(&hspi1, &temp, 1, 100);
 
@@ -115,6 +116,8 @@ void TMC2130_Set_Read_Register(uint8_t reg)
     HAL_SPI_Transmit(&hspi1, &temp, 1, 100);
 
     HAL_GPIO_WritePin(SPI_CS_GPIO_Port, SPI_CS_Pin, GPIO_PIN_SET);
+
+    return s;
 
     }
 
@@ -234,9 +237,9 @@ int main(void)
 
 
   //outputs on (LOW active)
-  //HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin, GPIO_PIN_RESET);
 
-  //HAL_TIM_Base_Start_IT(&htim11);
+  HAL_TIM_Base_Start_IT(&htim11);
 
   /* USER CODE END 2 */
  
@@ -251,14 +254,16 @@ int main(void)
 	uint32_t data;
 	uint8_t s;
 
-	if (HAL_GetTick() - time_elapsed > 100)
+	if (HAL_GetTick() - time_elapsed > 1000)
 	    {
 
 	    time_elapsed = HAL_GetTick();
 
-	    s = TMC2130_Read_Register(TMC2130_GSTAT, &data);
+	    HAL_TIM_Base_Stop_IT(&htim11);
 
-	    CLI_UART_Send_String("TMC2130_GSTAT:0x0");
+	    s = TMC2130_Read_Register(TMC2130_IOIN, &data);
+
+	    CLI_UART_Send_String("TMC2130_IOIN:0x0");
 	    CLI_UART_Send_Int_Hex(data);
 	    CLI_UART_Send_String("\t");
 	    CLI_UART_Send_String("Status:0x");
@@ -281,6 +286,8 @@ int main(void)
 		CLI_UART_Send_String(" standstill");
 		}
 	    CLI_UART_Send_String("\n");
+
+	    HAL_TIM_Base_Start_IT(&htim11);
 
 	    }
 
