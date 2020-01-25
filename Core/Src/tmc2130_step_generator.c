@@ -128,7 +128,6 @@ TMC2130_Motor_t *TMC2130_List[MAX_TMC2130];
 uint8_t TMC2130_List_Count = 0;
 
 
-
 // configure tim
 // configure in cube to generate 131Khz interrupt. see tim.c
 // gpio configured in cube see gpio.c
@@ -143,19 +142,16 @@ void TMC_Add(TMC2130_Motor_t *handle)
 	handle->Step_Generator.oldVelAccu = 0;
 	handle->Step_Generator.oldVelocity = 0;
 	handle->Step_Generator.newAcceleration = 0;
-
 	handle->Step_Generator.stallGuardThreshold = STALLGUARD_THRESHOLD;
-
 	handle->Step_Generator.mode = STEPDIR_INTERNAL;
 	handle->Step_Generator.frequency = STEPDIR_FREQUENCY;
 
 	tmc_ramp_linear_init(&handle->Step_Generator.ramp);
-	tmc_ramp_linear_set_precision(&handle->Step_Generator.ramp,
-		STEPDIR_FREQUENCY);
-	tmc_ramp_linear_set_maxVelocity(&handle->Step_Generator.ramp,
-		STEPDIR_DEFAULT_VELOCITY);
-	tmc_ramp_linear_set_acceleration(&handle->Step_Generator.ramp,
-		STEPDIR_DEFAULT_ACCELERATION);
+	tmc_ramp_linear_set_precision(&handle->Step_Generator.ramp, STEPDIR_FREQUENCY);
+	tmc_ramp_linear_set_maxVelocity(&handle->Step_Generator.ramp, STEPDIR_DEFAULT_VELOCITY);
+	tmc_ramp_linear_set_acceleration(&handle->Step_Generator.ramp, STEPDIR_DEFAULT_ACCELERATION);
+
+	TMC2130_Init(&handle->Motor);
 
 	TMC2130_List[TMC2130_List_Count++] = handle;
 	}

@@ -98,5 +98,76 @@ static const TMCRegisterConstant tmc2130_RegisterConstants[] =
 
 int32_t TMC2130_Read_Register(TMC2130TypeDef *tmc2130, uint8_t address);
 void TMC2130_Write_Register(TMC2130TypeDef *tmc2130, uint8_t address, int32_t value);
+void TMC2130_Init(TMC2130TypeDef *tmc2130);
+void TMC2130_Set_Max_Current(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Max_Current(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Standby_Current(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Standby_Current(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Power_Down(TMC2130TypeDef *motor_handle, int32_t value);
+void TMC2130_Set_Speed_Th(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Speed_Th(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_MIN_Speed_dcStep(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_MIN_Speed_dcStep(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_High_Speed_Full_Step_Mode(TMC2130TypeDef *motor_handle,
+	int32_t value);
+int32_t TMC2130_Get_High_Speed_Full_Step_Mode(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_High_Speed_Chopper_Mode(TMC2130TypeDef *motor_handle,
+	int32_t value);
+int32_t TMC2130_Get_High_Speed_Chopper_Mode(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Internal_RSense(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Internal_RSense(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Microstep(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Microstep(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Chopper_Blank_Time(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Chopper_Blank_Time(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Constant_Toff_Mode(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Constant_Toff_Mode(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Fast_Decay_Comparator(TMC2130TypeDef *motor_handle,
+	int32_t value);
+int32_t TMC2130_Get_Fast_Decay_Comparator(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Chopper_Hysteresis_Time(TMC2130TypeDef *motor_handle,
+	int32_t value);
+int32_t TMC2130_Get_Chopper_Hysteresis_Time(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Chopper_Hysteresis_Offset(TMC2130TypeDef *motor_handle,
+	int32_t value);
+int32_t TMC2130_Get_Chopper_Hysteresis_Offset(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Chpper_Off_Time(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Chpper_Off_Time(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_SEIMIN(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_SEIMIN(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_SEIDN(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_SEIDN(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_SEHYS(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_SEHYS(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_SEIU(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_SEIU(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_SEHYS_Start(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_SEHYS_Start(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Stall_Flter(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Stall_Flter(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Stall_Threshold(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Stall_Threshold(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Vsense(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Vsense(TMC2130TypeDef *motor_handle);
+int32_t TMC2130_Get_SE_Actual_Current(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_SE_Stallth_Speed(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_SE_Stallth_Speed(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Random_Toff_Mode(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Random_Toff_Mode(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Chopper_Sync(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Chopper_Sync(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_PWM_Threshold(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_PWM_Threshold(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_PWM_Gradient(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_PWM_Gradient(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_PWM_Amplitude(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_PWM_Amplitude(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_PWM_Frequency(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_PWM_Frequency(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_PWM_Autoscale(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_PWM_Autoscale(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Freewheeling_Mode(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Freewheeling_Mode(TMC2130TypeDef *motor_handle);
+int32_t TMC2130_Get_Load_Value(TMC2130TypeDef *motor_handle);
 
 #endif /* SRC_TMC2130_INTERFACE_API_H_ */

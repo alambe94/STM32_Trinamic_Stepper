@@ -80,14 +80,14 @@ int32_t TMC2130_Read_Register(TMC2130TypeDef *tmc2130, uint8_t address)
     }
 
 // Initialize a TMC2130 IC.
-void TMC2130_Init(TMC2130TypeDef *tmc2130, const int32_t *registerResetState)
+void TMC2130_Init(TMC2130TypeDef *tmc2130)
     {
 
     size_t i;
     for (i = 0; i < TMC2130_REGISTER_COUNT; i++)
 	{
 	tmc2130->registerAccess[i] = tmc2130_defaultRegisterAccess[i];
-	TMC2130_Write_Register(tmc2130, i, registerResetState[i]);
+	TMC2130_Write_Register(tmc2130, i, tmc2130_defaultRegisterResetState[i]);
 	}
     }
 
@@ -243,12 +243,12 @@ int32_t TMC2130_Get_Chopper_Blank_Time(TMC2130TypeDef *motor_handle)
     }
 
 // Constant TOff Mode
-void TMC2130_Set_Constant_TOFF_Mode(TMC2130TypeDef *motor_handle, int32_t value)
+void TMC2130_Set_Constant_Toff_Mode(TMC2130TypeDef *motor_handle, int32_t value)
     {
     TMC2130_FIELD_UPDATE(motor_handle, TMC2130_CHOPCONF, TMC2130_CHM_MASK,
 	    TMC2130_CHM_SHIFT, value);
     }
-int32_t TMC2130_Get_Constant_TOFF_Mode(TMC2130TypeDef *motor_handle)
+int32_t TMC2130_Get_Constant_Toff_Mode(TMC2130TypeDef *motor_handle)
     {
     return TMC2130_FIELD_READ(motor_handle, TMC2130_CHOPCONF, TMC2130_CHM_MASK,
 	    TMC2130_CHM_SHIFT);
@@ -434,12 +434,12 @@ int32_t TMC2130_Get_Stall_Flter(TMC2130TypeDef *motor_handle)
     }
 
 // stallGuard2 threshold
-void TMC2130_Set_Stallth1(TMC2130TypeDef *motor_handle, int32_t value)
+void TMC2130_Set_Stall_Threshold(TMC2130TypeDef *motor_handle, int32_t value)
     {
     TMC2130_FIELD_UPDATE(motor_handle, TMC2130_COOLCONF, TMC2130_SGT_MASK,
 	    TMC2130_SGT_SHIFT, value);
     }
-int32_t TMC2130_Get_Stallth1(TMC2130TypeDef *motor_handle)
+int32_t TMC2130_Get_Stall_Threshold(TMC2130TypeDef *motor_handle)
     {
     int32_t retvalue;
     retvalue = TMC2130_FIELD_READ(motor_handle, TMC2130_COOLCONF,
@@ -482,12 +482,12 @@ int32_t TMC2130_Get_SE_Stallth_Speed(TMC2130TypeDef *motor_handle)
     }
 
 // Random TOff mode
-void TMC2130_Set_Random_TOFF_Mode(TMC2130TypeDef *motor_handle, int32_t value)
+void TMC2130_Set_Random_Toff_Mode(TMC2130TypeDef *motor_handle, int32_t value)
     {
     TMC2130_FIELD_UPDATE(motor_handle, TMC2130_CHOPCONF, TMC2130_RNDTF_MASK,
 	    TMC2130_RNDTF_SHIFT, value);
     }
-int32_t TMC2130_Get_Random_TOFF_Mode(TMC2130TypeDef *motor_handle)
+int32_t TMC2130_Get_Random_Toff_Mode(TMC2130TypeDef *motor_handle)
     {
     return TMC2130_FIELD_READ(motor_handle, TMC2130_CHOPCONF,
 	    TMC2130_RNDTF_MASK, TMC2130_RNDTF_SHIFT);
