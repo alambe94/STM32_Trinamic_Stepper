@@ -10,6 +10,7 @@
 
 #include "tmc/helpers/API_Header.h"
 #include "tmc/ramp/LinearRamp1.h"
+#include "TMC2130.h"
 
 #define STEPDIR_FREQUENCY         (1 << 17)
 #define STEPDIR_MAX_VELOCITY      STEPDIR_FREQUENCY // Limit: 1 Step per interrupt (2^17 Hz) -> 2^17 pps
@@ -55,11 +56,7 @@ typedef struct
 	uint8_t haltingCondition;
 	// StallGuard
 	bool stallGuardActive;
-	int stallGuardThreshold;
-	uint16_t stallGuardPin;
-	// StepDir Pins
-	uint16_t stepPin;
-	uint16_t dirPin;
+	int32_t stallGuardThreshold;
 	// Acceleration updating sync mechanism (see acceleration setter for details)
 	StepDirSync syncFlag; // Synchronisation flag between main code & interrupt
 	// Snapshot data
@@ -74,5 +71,61 @@ typedef struct
 
 	TMC_LinearRamp ramp;
     } StepGeneraorTypedef;
+
+
+    typedef struct TMC2130_Motor_t
+    {
+
+	// filled internally
+	TMC2130TypeDef Motor;
+	ConfigurationTypeDef Motor_Config;
+	StepGeneraorTypedef Step_Generator;
+	TMC_LinearRamp Ramp_Calaculator;
+	StepDirMode Mode;
+
+	// filled externally
+	GPIO_TypeDef *Step_Port;
+	uint16_t Step_Pin;
+
+	GPIO_TypeDef *Dir_Port;
+	uint16_t Dir_Pin;
+
+	GPIO_TypeDef *Stall_Port;
+	uint16_t Stall_Pin;
+
+	GPIO_TypeDef *Enable_Port;
+	uint16_t Enable_Pin;
+
+    } TMC2130_Motor_t;
+
+void TMC_Add(TMC2130_Motor_t *handle);
+void TMC_TIM_Enable(uint8_t enable);
+void TMC_Enable_Driver(TMC2130_Motor_t *handle, uint8_t enable);
+void TMC_Rotate(TMC2130_Motor_t *handle, int32_t velocity);
+void TMC_Goto(TMC2130_Motor_t *handle, int32_t position);
+void TMC_Move(TMC2130_Motor_t *handle, int32_t steps);
+void TMC_Stop(TMC2130_Motor_t *handle, StepDirStop stopType);
+uint8_t TMC_Get_Status(TMC2130_Motor_t *handle);
+void TMC_stallGuard(TMC2130_Motor_t *handle, bool stall);
+void TMC_Set_Actual_Position(TMC2130_Motor_t *handle, int32_t actualPosition);
+void TMC_Set_Acceleration(TMC2130_Motor_t *handle, uint32_t acceleration);
+void TMC_Set_MAX_velocity(TMC2130_Motor_t *handle, int32_t velocityMax);
+void TMC_Set_Stall_Threshold(TMC2130_Motor_t *handle,
+	int32_t stallGuardThreshold);
+void TMC_Set_Frequency(TMC2130_Motor_t *handle, uint32_t frequency);
+void TMC_Set_Mode(TMC2130_Motor_t *handle, StepDirMode mode);
+void TMC_Set_Precision(TMC2130_Motor_t *handle, uint32_t precision);
+int32_t TMC_Get_Actual_Position(TMC2130_Motor_t *handle);
+int32_t TMC_Get_Target_Position(TMC2130_Motor_t *handle);
+int32_t TMC_Get_Actual_Velocity(TMC2130_Motor_t *handle);
+int32_t TMC_Get_Target_Velocity(TMC2130_Motor_t *handle);
+uint32_t TMC_Get_Acceleration(TMC2130_Motor_t *handle);
+int32_t TMC_Get_Max_Velocity(TMC2130_Motor_t *handle);
+int32_t TMC_Get_Stall_Threshold(TMC2130_Motor_t *handle);
+StepDirMode TMC_Get_Mode(TMC2130_Motor_t *handle);
+uint32_t TMC_Get_Frequency(TMC2130_Motor_t *handle);
+uint32_t TMC_Get_Precision(TMC2130_Motor_t *handle);
+int32_t TMC_Get_MAX_Acceleration(TMC2130_Motor_t *handle);
+int32_t TMC_Get_Measured_Speed(TMC2130_Motor_t *handle);
 
 #endif /* TMC2130_STEP_GENERATOR_H_ */

@@ -64,7 +64,7 @@ void tmc2130_init(TMC2130TypeDef *tmc2130, uint8_t channel, ConfigurationTypeDef
 	tmc2130->config->callback     = NULL;
 	tmc2130->config->channel      = channel;
 	tmc2130->config->configIndex  = 0;
-	tmc2130->config->state        = CONFIG_READY;
+	tmc2130->config->state        = CONFIG_RESET;
 
 	size_t i;
 	for(i = 0; i < TMC2130_REGISTER_COUNT; i++)
@@ -202,7 +202,6 @@ static void writeConfiguration(TMC2130TypeDef *tmc2130)
 // Call this periodically
 void tmc2130_periodicJob(TMC2130TypeDef *tmc2130, uint32_t tick)
 {
-	UNUSED(tick);
 
 	if(tmc2130->config->state != CONFIG_READY)
 	{

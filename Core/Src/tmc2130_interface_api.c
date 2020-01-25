@@ -8,6 +8,8 @@
 #include "TMC2130.h"
 #include "stm32f4xx_hal.h"
 
+// SPI configured in cube
+// see spi.c
 extern SPI_HandleTypeDef hspi1;
 void tmc2130_readWriteArray(uint8_t channel, uint8_t *data, size_t length)
     {
@@ -98,13 +100,6 @@ void TMC2130_Set_Internal_RSense(TMC2130TypeDef * motor_handle, int32_t value)
 int32_t TMC2130_Get_Internal_RSense(TMC2130TypeDef * motor_handle)
     {
     return TMC2130_FIELD_READ(motor_handle, TMC2130_GCONF, TMC2130_INTERNAL_RSENSE_MASK, TMC2130_INTERNAL_RSENSE_SHIFT);
-    }
-
-// Measured Speed
-int32_t TMC2130_Get_Measured_Speed(TMC2130TypeDef * motor_handle)
-    {
-    int32_t tempValue = (int32_t)(((int64_t)TMC2130_Get_Frequency() * (int64_t)122) / (int64_t)TMC2130_FIELD_READ(motor_handle, TMC2130_TSTEP, TMC2130_TSTEP_MASK, TMC2130_TSTEP_SHIFT));
-    return (abs(tempValue) < 20) ? 0 : tempValue;
     }
 
 // Microstep Resolution
@@ -337,16 +332,6 @@ int32_t TMC2130_Get_Vsense(TMC2130TypeDef * motor_handle)
 int32_t TMC2130_Get_SE_Actual_Current(TMC2130TypeDef * motor_handle)
     {
     return TMC2130_FIELD_READ(motor_handle, TMC2130_DRV_STATUS, TMC2130_CS_ACTUAL_MASK, TMC2130_CS_ACTUAL_SHIFT);
-    }
-
-// smartEnergy stall velocity
-void TMC2130_Set_SE_Stall_Velocity(TMC2130TypeDef * motor_handle, int32_t value)
-    {
-    StepDir_setStallGuardThreshold(value);
-    }
-int32_t TMC2130_Get_SE_Stall_Velocity(TMC2130TypeDef * motor_handle)
-    {
-    return StepDir_getStallGuardThreshold();
     }
 
 // smartEnergy threshold speed

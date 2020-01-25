@@ -213,13 +213,13 @@ void TIM1_TRG_COM_TIM11_IRQHandler(void)
 
 /* USER CODE BEGIN 1 */
 
-extern void TMC2130_Step_TIM_ISR();
+extern void TMC_TIM_ISR();
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
 
     if (htim == &htim11)
 	{
-	TMC2130_Step_TIM_ISR();
+	TMC_TIM_ISR();
 	}
 
     }

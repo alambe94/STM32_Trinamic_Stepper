@@ -29,11 +29,7 @@
 /* USER CODE BEGIN Includes */
 #include "stdlib.h"
 #include "delay_us.h"
-
-#include "TMC2130_Register.h"
-
-#include "TMC2130.h"
-
+#include "tmc2130_step_generator.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,6 +52,8 @@
 
 extern UART_HandleTypeDef huart2;
 UART_HandleTypeDef* CLI_UART = &huart2;
+
+TMC2130_Motor_t Motor_X;
 
 /* USER CODE END PV */
 
@@ -135,6 +133,28 @@ int main(void)
   MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
 
+  Motor_X.Dir_Port = DIR_GPIO_Port;
+  Motor_X.Dir_Pin  = DIR_Pin;
+
+  Motor_X.Enable_Port = EN_GPIO_Port;
+  Motor_X.Enable_Pin = EN_Pin;
+
+  Motor_X.Step_Port = STEP_GPIO_Port;
+  Motor_X.Step_Pin = STEP_Pin;
+
+  Motor_X.Stall_Port = NULL;
+
+  TMC_Add(&Motor_X);
+
+
+
+  TMC_Enable_Driver(&Motor_X, 1);
+
+  TMC_TIM_Enable(1);
+
+  TMC_Move(&Motor_X, 1000000);
+
+
 
   /* USER CODE END 2 */
  
@@ -145,19 +165,10 @@ int main(void)
   while (1)
   {
 
-	static uint32_t time_elapsed = 0;
-	uint32_t data;
-	uint8_t s;
-
-	if (HAL_GetTick() - time_elapsed > 1000)
-	    {
-
-
-
-	    }
-
-
+      tmc2130_periodicJob(&Motor_X.Motor, 0);
     /* USER CODE END WHILE */
+
+
 
     /* USER CODE BEGIN 3 */
   }
