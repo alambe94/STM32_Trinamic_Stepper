@@ -133,28 +133,6 @@ int main(void)
   MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
 
-  Motor_X.Dir_Port = DIR_GPIO_Port;
-  Motor_X.Dir_Pin  = DIR_Pin;
-
-  Motor_X.Enable_Port = EN_GPIO_Port;
-  Motor_X.Enable_Pin = EN_Pin;
-
-  Motor_X.Step_Port = STEP_GPIO_Port;
-  Motor_X.Step_Pin = STEP_Pin;
-
-  Motor_X.Stall_Port = NULL;
-
-  TMC_Add(&Motor_X);
-
-
-
-  TMC_Enable_Driver(&Motor_X, 1);
-
-  TMC_TIM_Enable(1);
-
-  TMC_Move(&Motor_X, 1000000);
-
-
 
   /* USER CODE END 2 */
  
@@ -165,7 +143,6 @@ int main(void)
   while (1)
   {
 
-      tmc2130_periodicJob(&Motor_X.Motor, 0);
     /* USER CODE END WHILE */
 
 

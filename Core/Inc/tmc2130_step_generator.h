@@ -10,7 +10,7 @@
 
 #include "tmc/helpers/API_Header.h"
 #include "tmc/ramp/LinearRamp1.h"
-#include "TMC2130.h"
+#include "tmc2130_interface_api.h"
 
 #define STEPDIR_FREQUENCY         (1 << 17)
 #define STEPDIR_MAX_VELOCITY      STEPDIR_FREQUENCY // Limit: 1 Step per interrupt (2^17 Hz) -> 2^17 pps
@@ -72,29 +72,12 @@ typedef struct
 	TMC_LinearRamp ramp;
     } StepGeneraorTypedef;
 
-
-    typedef struct TMC2130_Motor_t
+typedef struct TMC2130_Motor_t
     {
-
-	// filled internally
 	TMC2130TypeDef Motor;
-	ConfigurationTypeDef Motor_Config;
 	StepGeneraorTypedef Step_Generator;
 	TMC_LinearRamp Ramp_Calaculator;
 	StepDirMode Mode;
-
-	// filled externally
-	GPIO_TypeDef *Step_Port;
-	uint16_t Step_Pin;
-
-	GPIO_TypeDef *Dir_Port;
-	uint16_t Dir_Pin;
-
-	GPIO_TypeDef *Stall_Port;
-	uint16_t Stall_Pin;
-
-	GPIO_TypeDef *Enable_Port;
-	uint16_t Enable_Pin;
 
     } TMC2130_Motor_t;
 
