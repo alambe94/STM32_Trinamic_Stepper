@@ -115,18 +115,43 @@
  *      being reset.
  */
 
+#include "stm32f4xx_hal.h"
 #include "tmc2130_step_generator.h"
 #include "TMC2130.h"
-
 
 // Reset value for stallguard threshold. Since Stallguard is motor/application-specific we can't choose a good value here,
 // so this value is rather randomly chosen. Leaving it at zero means stall detection turned off.
 #define STALLGUARD_THRESHOLD 0
 
+typedef struct TMC2130_Motor_t
+    {
+	TMC2130TypeDef Motor;
+	ConfigurationTypeDef Motor_Config;
+	StepGeneraorTypedef Step_Generator;
+	TMC_LinearRamp Ramp_Calaculator;
+	StepDirMode Mode;
 
-StepGeneraorTypedef Motor_X;
-TMC_LinearRamp Motor_X_Ramp;
-StepDirMode Motor_X_Mode = STEPDIR_INTERNAL;
+	GPIO_TypeDef *Step_Port;
+	uint16_t Step_Pin;
+
+	GPIO_TypeDef *Dir_Port;
+	uint16_t Dir_Pin;
+
+    } TMC2130_Motor_t;
+
+#define MAX_TMC2130 3
+
+TMC2130_Motor_t *TMC2130_List[MAX_TMC2130];
+uint8_t TMC2130_List_Count = 0;
+
+void TMC2130_Add(TMC2130_Motor_t *handle)
+    {
+    if (TMC2130_List_Count < MAX_TMC2130)
+	{
+	TMC2130_List[TMC2130_List_Count++] = handle;
+	}
+
+    }
 
 int32_t calculateStepDifference(int32_t velocity, uint32_t oldAccel,
 	uint32_t newAccel);
@@ -134,136 +159,152 @@ int32_t calculateStepDifference(int32_t velocity, uint32_t oldAccel,
 void TMC2130_Step_TIM_ISR()
     {
 
-    // If any halting condition is present, abort immediately
-    if (Motor_X.haltingCondition);
+    TMC2130_Motor_t *handle = NULL;
 
-    // Reset step output (falling edge of last pulse)
-
-    // Check StallGuard pin if one is registered
-
-    // Compute ramp
-    int32_t dx = tmc_ramp_linear_compute(&Motor_X_Ramp);
-
-    // Step
-    if (dx == 0) // No change in position -> skip step generation
-	goto skipStep;
-
-    // Direction
-    //*((dx > 0) ? 1:0;
-
-    // Set step output (rising edge of step pulse)
-
-    skipStep:
-    // Synchronised Acceleration update
-    switch (Motor_X.syncFlag)
+    for (uint8_t i = 0; i < TMC2130_List_Count; i++)
 	{
-    case SYNC_SNAPSHOT_REQUESTED:
-	// Apply the new acceleration
-	tmc_ramp_linear_set_acceleration(&Motor_X_Ramp,
-		Motor_X.newAcceleration);
-	// Save a snapshot of the velocity
-	Motor_X.oldVelocity = tmc_ramp_linear_get_rampVelocity(&Motor_X_Ramp);
 
-	Motor_X.syncFlag = SYNC_SNAPSHOT_SAVED;
-	break;
-    case SYNC_UPDATE_DATA:
-	Motor_X_Ramp.accelerationSteps += Motor_X.stepDifference;
-	Motor_X.syncFlag = SYNC_IDLE;
-	break;
-    default:
-	break;
+	handle = TMC2130_List[TMC2130_List_Count];
+
+	// If any halting condition is present, abort immediately
+	if (handle->Step_Generator.haltingCondition)
+	    ;
+
+	// Reset step output (falling edge of last pulse)
+
+	// Check StallGuard pin if one is registered
+
+	// Compute ramp
+	int32_t dx = tmc_ramp_linear_compute(&handle->Ramp_Calaculator);
+
+	// Step
+	if (dx == 0) // No change in position -> skip step generation
+	    goto skipStep;
+
+	// Direction
+	//*((dx > 0) ? 1:0;
+
+	// Set step output (rising edge of step pulse)
+
+	skipStep:
+	// Synchronised Acceleration update
+	switch (handle->Step_Generator.syncFlag)
+	    {
+	case SYNC_SNAPSHOT_REQUESTED:
+	    // Apply the new acceleration
+	    tmc_ramp_linear_set_acceleration(&handle->Ramp_Calaculator,
+		    handle->Step_Generator.newAcceleration);
+	    // Save a snapshot of the velocity
+	    handle->Step_Generator.oldVelocity =
+		    tmc_ramp_linear_get_rampVelocity(&handle->Ramp_Calaculator);
+
+	    handle->Step_Generator.syncFlag = SYNC_SNAPSHOT_SAVED;
+	    break;
+	case SYNC_UPDATE_DATA:
+	    handle->Ramp_Calaculator.accelerationSteps +=
+		    handle->Step_Generator.stepDifference;
+	    handle->Step_Generator.syncFlag = SYNC_IDLE;
+	    break;
+	default:
+	    break;
+	    }
 	}
-
     }
 
-void TMC2130_Rotate(int32_t velocity)
+void TMC2130_Rotate(TMC2130_Motor_t *handle, int32_t velocity)
     {
 
     // Set the rampmode first - other way around might cause issues
-    tmc_ramp_linear_set_mode(&Motor_X_Ramp, TMC_RAMP_LINEAR_MODE_VELOCITY);
-    switch (Motor_X_Mode)
+    tmc_ramp_linear_set_mode(&handle->Ramp_Calaculator,
+	    TMC_RAMP_LINEAR_MODE_VELOCITY);
+    switch (handle->Mode)
 	{
     case STEPDIR_INTERNAL:
-	tmc_ramp_linear_set_targetVelocity(&Motor_X_Ramp,
+	tmc_ramp_linear_set_targetVelocity(&handle->Ramp_Calaculator,
 		MIN(STEPDIR_MAX_VELOCITY, velocity));
 	break;
     case STEPDIR_EXTERNAL:
     default:
-	tmc_ramp_linear_set_targetVelocity(&Motor_X_Ramp, velocity);
+	tmc_ramp_linear_set_targetVelocity(&handle->Ramp_Calaculator, velocity);
 	break;
 	}
     }
 
-void TMC2130_Goto(uint8_t channel, int position)
+void TMC2130_Goto(TMC2130_Motor_t *handle, int position)
     {
-    tmc_ramp_linear_set_mode(&Motor_X_Ramp, TMC_RAMP_LINEAR_MODE_POSITION);
-    tmc_ramp_linear_set_targetPosition(&Motor_X_Ramp, position);
+    tmc_ramp_linear_set_mode(&handle->Ramp_Calaculator,
+	    TMC_RAMP_LINEAR_MODE_POSITION);
+    tmc_ramp_linear_set_targetPosition(&handle->Ramp_Calaculator, position);
     }
 
-void TMC2130_Move(uint8_t motor, int32_t *ticks)
+void TMC2130_Move(TMC2130_Motor_t *handle, uint8_t motor, int32_t ticks)
     {
     // determine actual position and add numbers of ticks to move
-    *ticks += TMC2130_Get_Actual_Position();
-    return TMC2130_Goto(motor, *ticks);
+    ticks += TMC2130_Get_Actual_Position();
+    return TMC2130_Goto(motor, ticks);
     }
 
-void TMC2130_Loop(uint8_t channel, int position)
+void TMC2130_Loop(TMC2130_Motor_t *handle, int position)
     {
 
     // Check stallguard velocity threshold
-    if ((Motor_X.stallGuardThreshold != 0)
-	    && (abs(tmc_ramp_linear_get_rampVelocity(&Motor_X_Ramp))
-		    >= Motor_X.stallGuardThreshold))
+    if ((handle->Step_Generator.stallGuardThreshold != 0)
+	    && (abs(tmc_ramp_linear_get_rampVelocity(&handle->Ramp_Calaculator))
+		    >= handle->Step_Generator.stallGuardThreshold))
 	{
-	Motor_X.stallGuardActive = true;
+	handle->Step_Generator.stallGuardActive = true;
 	}
     else
 	{
-	Motor_X.stallGuardActive = false;
+	handle->Step_Generator.stallGuardActive = false;
 	}
 
     }
 
-void TMC2130_Stop(StepDirStop stopType)
+void TMC2130_Stop(TMC2130_Motor_t *handle, StepDirStop stopType)
     {
     switch (stopType)
 	{
     case STOP_NORMAL:
-	tmc_ramp_linear_set_targetVelocity(&Motor_X_Ramp, 0);
-	tmc_ramp_linear_set_mode(&Motor_X_Ramp, TMC_RAMP_LINEAR_MODE_VELOCITY);
+	tmc_ramp_linear_set_targetVelocity(&handle->Ramp_Calaculator, 0);
+	tmc_ramp_linear_set_mode(&handle->Ramp_Calaculator,
+		TMC_RAMP_LINEAR_MODE_VELOCITY);
 	break;
     case STOP_EMERGENCY:
-	Motor_X.haltingCondition |= STATUS_EMERGENCY_STOP;
+	handle->Step_Generator.haltingCondition |= STATUS_EMERGENCY_STOP;
 	break;
     case STOP_STALL:
-	Motor_X.haltingCondition |= STATUS_STALLED;
-	tmc_ramp_linear_set_rampVelocity(&Motor_X_Ramp, 0);
-	Motor_X.ramp.accumulatorVelocity = 0;
-	tmc_ramp_linear_set_targetVelocity(&Motor_X_Ramp, 0);
-	Motor_X.ramp.accelerationSteps = 0;
+	handle->Step_Generator.haltingCondition |= STATUS_STALLED;
+	tmc_ramp_linear_set_rampVelocity(&handle->Ramp_Calaculator, 0);
+	handle->Step_Generator.ramp.accumulatorVelocity = 0;
+	tmc_ramp_linear_set_targetVelocity(&handle->Ramp_Calaculator, 0);
+	handle->Step_Generator.ramp.accelerationSteps = 0;
 	break;
 	}
     }
 
-uint8_t TMC2130_Get_Status()
+uint8_t TMC2130_Get_Status(TMC2130_Motor_t *handle)
     {
 
-    uint8_t status = Motor_X.haltingCondition;
+    uint8_t status = handle->Step_Generator.haltingCondition;
 
-    status |= (Motor_X.targetReached) ? STATUS_TARGET_REACHED : 0;
-    status |= (Motor_X.stallGuardActive) ? STATUS_STALLGUARD_ACTIVE : 0;
     status |=
-	    (tmc_ramp_linear_get_mode(&Motor_X_Ramp)
+	    (handle->Step_Generator.targetReached) ? STATUS_TARGET_REACHED : 0;
+    status |=
+	    (handle->Step_Generator.stallGuardActive) ?
+		    STATUS_STALLGUARD_ACTIVE : 0;
+    status |=
+	    (tmc_ramp_linear_get_mode(&handle->Ramp_Calaculator)
 		    == TMC_RAMP_LINEAR_MODE_VELOCITY) ? STATUS_MODE : 0;
 
     return status;
     }
 
-void TMC2130_stallGuard(bool stall)
+void TMC2130_stallGuard(TMC2130_Motor_t *handle, bool stall)
     {
-    if (Motor_X.stallGuardActive && stall)
+    if (handle->Step_Generator.stallGuardActive && stall)
 	{
-	TMC2130_Stop(STOP_STALL);
+	TMC2130_Stop(handle, STOP_STALL);
 	}
     }
 
@@ -271,45 +312,49 @@ void TMC2130_stallGuard(bool stall)
 // The setters are responsible to access their respective variables while keeping the ramp generation stable
 
 // Set actual and target position (Not during an active position ramp)
-void TMC2130_Set_Actual_Position(uint8_t channel, int actualPosition)
+void TMC2130_Set_Actual_Position(TMC2130_Motor_t *handle, int actualPosition)
     {
 
-    if (tmc_ramp_linear_get_mode(&Motor_X_Ramp)
+    if (tmc_ramp_linear_get_mode(&handle->Ramp_Calaculator)
 	    == TMC_RAMP_LINEAR_MODE_POSITION)
 	{
 	// In position mode: If we're not idle -> abort
-//		if ((Motor_X.actualVelocity != 0) ||
-//		   (Motor_X.actualPosition != Motor_X.targetPosition))
+//		if ((handle->Step_Generator.actualVelocity != 0) ||
+//		   (handle->Step_Generator.actualPosition != handle->Step_Generator.targetPosition))
 //		{
 //			return;
 //		}
 
 	// todo CHECK 2: Use a haltingCondition to prevent movement instead of VMAX? (LH)
 	// Temporarity set VMAX to 0 to prevent movement between setting actualPosition and targetPosition
-//		uint32_t tmp = Motor_X.velocityMax;
-//		Motor_X.velocityMax = 0;
+//		uint32_t tmp = handle->Step_Generator.velocityMax;
+//		handle->Step_Generator.velocityMax = 0;
 
 	// Also update target position to prevent movement
-	tmc_ramp_linear_set_targetPosition(&Motor_X_Ramp, actualPosition);
-	tmc_ramp_linear_set_rampPosition(&Motor_X_Ramp, actualPosition);
+	tmc_ramp_linear_set_targetPosition(&handle->Ramp_Calaculator,
+		actualPosition);
+	tmc_ramp_linear_set_rampPosition(&handle->Ramp_Calaculator,
+		actualPosition);
 
 	// Restore VMAX
-//		Motor_X.velocityMax = tmp;
+//		handle->Step_Generator.velocityMax = tmp;
 	}
     else
 	{
 	// In velocity mode the position is not relevant so we can just update it without precautions
-	tmc_ramp_linear_set_rampPosition(&Motor_X_Ramp, actualPosition);
+	tmc_ramp_linear_set_rampPosition(&handle->Ramp_Calaculator,
+		actualPosition);
 	}
     }
 
-void TMC2130_Set_Acceleration(uint32_t acceleration)
+void TMC2130_Set_Acceleration(TMC2130_Motor_t *handle, uint32_t acceleration)
     {
 
-    if (tmc_ramp_linear_get_mode(&Motor_X_Ramp)
+    if (tmc_ramp_linear_get_mode(&handle->Ramp_Calaculator)
 	    == TMC_RAMP_LINEAR_MODE_VELOCITY)
 	{	// Velocity mode does not require any special actions
-	tmc_ramp_linear_set_acceleration(&Motor_X_Ramp, acceleration);
+	tmc_ramp_linear_set_acceleration(&handle->Ramp_Calaculator,
+		acceleration);
 	return;
 	}
 
@@ -317,133 +362,137 @@ void TMC2130_Set_Acceleration(uint32_t acceleration)
     if (acceleration == 0)
 	return;
 
-    tmc_ramp_linear_set_acceleration(&Motor_X_Ramp, acceleration);
+    tmc_ramp_linear_set_acceleration(&handle->Ramp_Calaculator, acceleration);
 
     // Store the old acceleration
-    uint32_t oldAcceleration = tmc_ramp_linear_get_acceleration(&Motor_X_Ramp);
+    uint32_t oldAcceleration = tmc_ramp_linear_get_acceleration(
+	    &handle->Ramp_Calaculator);
 
     // If the channel is not halted we need to synchronise with the interrupt
-    if (Motor_X.haltingCondition == 0)
+    if (handle->Step_Generator.haltingCondition == 0)
 	{
 	// Sync mechanism: store the new acceleration value and request
 	// a snapshot from the interrupt
-	Motor_X.newAcceleration = acceleration;
-	Motor_X.syncFlag = SYNC_SNAPSHOT_REQUESTED;
+	handle->Step_Generator.newAcceleration = acceleration;
+	handle->Step_Generator.syncFlag = SYNC_SNAPSHOT_REQUESTED;
 	// Wait for the flag update from the interrupt.
-	while (ACCESS_ONCE(Motor_X.syncFlag) != SYNC_SNAPSHOT_SAVED)
+	while (ACCESS_ONCE(handle->Step_Generator.syncFlag)
+		!= SYNC_SNAPSHOT_SAVED)
 	    ; // todo CHECK 2: Timeout to prevent deadlock? (LH) #1
 	}
     else
 	{ // Channel is halted -> access data directly without sync mechanism
-	  //Motor_X.acceleration = acceleration;
-	tmc_ramp_linear_set_acceleration(&Motor_X_Ramp, acceleration);
-	Motor_X.oldVelocity = tmc_ramp_linear_get_rampVelocity(&Motor_X_Ramp);
+	  //handle->Step_Generator.acceleration = acceleration;
+	tmc_ramp_linear_set_acceleration(&handle->Ramp_Calaculator,
+		acceleration);
+	handle->Step_Generator.oldVelocity = tmc_ramp_linear_get_rampVelocity(
+		&handle->Ramp_Calaculator);
 	}
 
-    int32_t stepDifference = calculateStepDifference(Motor_X.oldVelocity,
-	    oldAcceleration, acceleration);
+    int32_t stepDifference = calculateStepDifference(
+	    handle->Step_Generator.oldVelocity, oldAcceleration, acceleration);
 
-    if (Motor_X.haltingCondition == 0)
+    if (handle->Step_Generator.haltingCondition == 0)
 	{
-	Motor_X.stepDifference = stepDifference;
-	Motor_X.syncFlag = SYNC_UPDATE_DATA;
+	handle->Step_Generator.stepDifference = stepDifference;
+	handle->Step_Generator.syncFlag = SYNC_UPDATE_DATA;
 
 	// Wait for interrupt to set flag to SYNC_IDLE
-	while (ACCESS_ONCE(Motor_X.syncFlag) != SYNC_IDLE)
+	while (ACCESS_ONCE(handle->Step_Generator.syncFlag) != SYNC_IDLE)
 	    ; // todo CHECK 2: Timeout to prevent deadlock? (LH) #2
 	}
     else
 	{ // Channel is halted -> access data directly without sync mechanism
-	Motor_X.ramp.accelerationSteps += stepDifference;
+	handle->Step_Generator.ramp.accelerationSteps += stepDifference;
 	}
     }
 
-void TMC2130_Set_MAX_velocity(int velocityMax)
+void TMC2130_Set_MAX_velocity(TMC2130_Motor_t *handle, int velocityMax)
     {
-    tmc_ramp_linear_set_maxVelocity(&Motor_X_Ramp, velocityMax);
+    tmc_ramp_linear_set_maxVelocity(&handle->Ramp_Calaculator, velocityMax);
     }
 
 // Set the velocity threshold for active StallGuard. Also reset the stall flag
-void TMC2130_Set_Stallth(int stallGuardThreshold)
+void TMC2130_Set_Stallth(TMC2130_Motor_t *handle, int stallGuardThreshold)
     {
-    Motor_X.stallGuardThreshold = stallGuardThreshold;
-    Motor_X.haltingCondition &= ~STATUS_STALLED;
+    handle->Step_Generator.stallGuardThreshold = stallGuardThreshold;
+    handle->Step_Generator.haltingCondition &= ~STATUS_STALLED;
     }
 
-void TMC2130_Set_Frequency(uint32_t frequency)
+void TMC2130_Set_Frequency(TMC2130_Motor_t *handle, uint32_t frequency)
     {
-    Motor_X.frequency = frequency;
+    handle->Step_Generator.frequency = frequency;
     }
 
-void TMC2130_Set_Mode(StepDirMode mode)
+void TMC2130_Set_Mode(TMC2130_Motor_t *handle, StepDirMode mode)
     {
-    Motor_X_Mode = mode;
+    handle->Mode = mode;
 
     if (mode == STEPDIR_INTERNAL)
 	{
-	TMC2130_Set_Frequency(STEPDIR_FREQUENCY);
+	TMC2130_Set_Frequency(handle, STEPDIR_FREQUENCY);
 	}
     }
 
-void TMC2130_Set_Precision(uint32_t precision)
+void TMC2130_Set_Precision(TMC2130_Motor_t *handle, uint32_t precision)
     {
-    tmc_ramp_linear_set_precision(&Motor_X_Ramp, precision);
+    tmc_ramp_linear_set_precision(&handle->Ramp_Calaculator, precision);
     }
 
 // ===== Getters =====
-int TMC2130_Get_Actual_Position()
+int TMC2130_Get_Actual_Position(TMC2130_Motor_t *handle)
     {
-    return tmc_ramp_linear_get_rampPosition(&Motor_X_Ramp);
+    return tmc_ramp_linear_get_rampPosition(&handle->Ramp_Calaculator);
     }
 
-int TMC2130_Get_Target_Position()
+int TMC2130_Get_Target_Position(TMC2130_Motor_t *handle)
     {
-    return tmc_ramp_linear_get_targetPosition(&Motor_X_Ramp);
+    return tmc_ramp_linear_get_targetPosition(&handle->Ramp_Calaculator);
     }
 
-int TMC2130_Get_Actual_Velocity()
+int TMC2130_Get_Actual_Velocity(TMC2130_Motor_t *handle)
     {
-    return tmc_ramp_linear_get_rampVelocity(&Motor_X_Ramp);
+    return tmc_ramp_linear_get_rampVelocity(&handle->Ramp_Calaculator);
     }
 
-int TMC2130_Get_Target_Velocity(uint8_t channel)
+int TMC2130_Get_Target_Velocity(TMC2130_Motor_t *handle)
     {
-    return tmc_ramp_linear_get_targetVelocity(&Motor_X_Ramp);
+    return tmc_ramp_linear_get_targetVelocity(&handle->Ramp_Calaculator);
     }
 
-uint32_t TMC2130_Get_Acceleration(uint8_t channel)
+uint32_t TMC2130_Get_Acceleration(TMC2130_Motor_t *handle)
     {
-    return tmc_ramp_linear_get_acceleration(&Motor_X_Ramp);
+    return tmc_ramp_linear_get_acceleration(&handle->Ramp_Calaculator);
     }
 
-int TMC2130_Get_Max_Velocity(uint8_t channel)
+int TMC2130_Get_Max_Velocity(TMC2130_Motor_t *handle)
     {
-    return tmc_ramp_linear_get_maxVelocity(&Motor_X_Ramp);
+    return tmc_ramp_linear_get_maxVelocity(&handle->Ramp_Calaculator);
     }
 
-int TMC2130_Get_Stallth(uint8_t channel)
+int TMC2130_Get_Stallth(TMC2130_Motor_t *handle)
     {
-    return Motor_X.stallGuardThreshold;
+    return handle->Step_Generator.stallGuardThreshold;
     }
 
-StepDirMode TMC2130_Get_Mode()
+StepDirMode TMC2130_Get_Mode(TMC2130_Motor_t *handle)
     {
-    return Motor_X_Mode;
+    return handle->Mode;
     }
 
-uint32_t TMC2130_Get_Frequency()
+uint32_t TMC2130_Get_Frequency(TMC2130_Motor_t *handle)
     {
-    return Motor_X.frequency;
+    return handle->Step_Generator.frequency;
     }
 
-uint32_t TMC2130_Get_Precision()
+uint32_t TMC2130_Get_Precision(TMC2130_Motor_t *handle)
     {
-    return tmc_ramp_linear_get_precision(&Motor_X_Ramp);
+    return tmc_ramp_linear_get_precision(&handle->Ramp_Calaculator);
     }
 
-int32_t TMC2130_Get_MAX_Acceleration(uint8_t channel)
+int32_t TMC2130_Get_MAX_Acceleration(TMC2130_Motor_t *handle)
     {
-    if (Motor_X_Mode == STEPDIR_INTERNAL)
+    if (handle->Mode == STEPDIR_INTERNAL)
 	return STEPDIR_MAX_ACCELERATION;
 
     // STEPDIR_EXTERNAL -> no limitation from this generator
@@ -452,7 +501,7 @@ int32_t TMC2130_Get_MAX_Acceleration(uint8_t channel)
 
 // ===================
 
-void TMC2130_Init(uint32_t precision)
+void TMC2130_Init(TMC2130_Motor_t *handle, uint32_t precision)
     {
     if (precision == 0)
 	{
@@ -460,38 +509,34 @@ void TMC2130_Init(uint32_t precision)
 	precision = STEPDIR_FREQUENCY;
 	}
 
-    Motor_X.oldVelAccu = 0;
-    Motor_X.oldVelocity = 0;
-    Motor_X.newAcceleration = 0;
+    handle->Step_Generator.oldVelAccu = 0;
+    handle->Step_Generator.oldVelocity = 0;
+    handle->Step_Generator.newAcceleration = 0;
 
     // Set the no-pin halting conditions before changing the pins
     // to avoid a race condition with the interrupt
-    Motor_X.haltingCondition = STATUS_NO_STEP_PIN | STATUS_NO_DIR_PIN;
-    Motor_X.stallGuardPin = 0x00;
-    Motor_X.stepPin = 0x00;
-    Motor_X.dirPin = 0x00;
+    handle->Step_Generator.haltingCondition = STATUS_NO_STEP_PIN
+	    | STATUS_NO_DIR_PIN;
+    handle->Step_Generator.stallGuardPin = 0x00;
+    handle->Step_Generator.stepPin = 0x00;
+    handle->Step_Generator.dirPin = 0x00;
 
-    Motor_X.stallGuardThreshold = STALLGUARD_THRESHOLD;
+    handle->Step_Generator.stallGuardThreshold = STALLGUARD_THRESHOLD;
 
-    Motor_X.mode = STEPDIR_INTERNAL;
-    Motor_X.frequency = precision;
+    handle->Step_Generator.mode = STEPDIR_INTERNAL;
+    handle->Step_Generator.frequency = precision;
 
-    tmc_ramp_linear_init(&Motor_X.ramp);
-    tmc_ramp_linear_set_precision(&Motor_X.ramp, precision);
-    tmc_ramp_linear_set_maxVelocity(&Motor_X.ramp,
+    tmc_ramp_linear_init(&handle->Step_Generator.ramp);
+    tmc_ramp_linear_set_precision(&handle->Step_Generator.ramp, precision);
+    tmc_ramp_linear_set_maxVelocity(&handle->Step_Generator.ramp,
     STEPDIR_DEFAULT_VELOCITY);
-    tmc_ramp_linear_set_acceleration(&Motor_X.ramp,
+    tmc_ramp_linear_set_acceleration(&handle->Step_Generator.ramp,
     STEPDIR_DEFAULT_ACCELERATION);
 
     // Chip-specific hardware peripheral initialisation
     // configure tim
 
     }
-
-
-
-
-
 
 // ===== Helper function =====
 /* The required calculation to do is the difference of the required
