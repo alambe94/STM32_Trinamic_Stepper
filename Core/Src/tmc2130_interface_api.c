@@ -7,6 +7,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "tmc2130_interface_api.h"
+#include "delay_us.h"
 
 // SPI configured in cube
 // see spi.c
@@ -61,7 +62,6 @@ int32_t TMC2130_Read_Register(TMC2130TypeDef *tmc2130, uint8_t address)
     HAL_SPI_Transmit(&hspi1, &temp, 1, 100);
     HAL_SPI_Transmit(&hspi1, &temp, 1, 100);
     HAL_GPIO_WritePin(tmc2130->CS_Port, tmc2130->CS_Pin, GPIO_PIN_SET);
-
 
     HAL_GPIO_WritePin(tmc2130->CS_Port, tmc2130->CS_Pin, GPIO_PIN_RESET);
     HAL_SPI_Transmit(&hspi1, &address, 1, 100);
@@ -177,6 +177,13 @@ int32_t TMC2130_Get_Internal_RSense(TMC2130TypeDef *motor_handle)
     {
     return TMC2130_FIELD_READ(motor_handle, TMC2130_GCONF,
 	    TMC2130_INTERNAL_RSENSE_MASK, TMC2130_INTERNAL_RSENSE_SHIFT);
+    }
+
+// I_scale_analog
+void TMC2130_Set_I_Scale_Analog(TMC2130TypeDef *motor_handle, int32_t value)
+    {
+    TMC2130_FIELD_UPDATE(motor_handle, TMC2130_GCONF,
+	    TMC2130_I_SCALE_ANALOG_MASK, TMC2130_I_SCALE_ANALOG_SHIFT, value);
     }
 
 // Microstep Resolution

@@ -30,6 +30,7 @@
 #include "stdlib.h"
 #include "delay_us.h"
 #include "tmc2130_step_generator.h"
+#include "main.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,7 +54,8 @@
 extern UART_HandleTypeDef huart2;
 UART_HandleTypeDef* CLI_UART = &huart2;
 
-TMC2130_Motor_t Motor_X;
+TMC2130TypeDef Motor_X;
+TMC2130_Controller_t Motor_X_Controller = {.Motor = &Motor_X};
 
 /* USER CODE END PV */
 
@@ -133,6 +135,25 @@ int main(void)
   MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
 
+  Motor_X.CS_Port = SPI_CS_GPIO_Port;
+  Motor_X.CS_Pin  = SPI_CS_Pin;
+
+  Motor_X.Step_Port = STEP_GPIO_Port;
+  Motor_X.Step_Pin  = STEP_Pin;
+
+  Motor_X.Dir_Port = DIR_GPIO_Port;
+  Motor_X.Dir_Pin =DIR_Pin;
+
+  Motor_X.Enable_Port = EN_GPIO_Port;
+  Motor_X.Enable_Pin = EN_Pin;
+
+  TMC_Add(&Motor_X_Controller);
+
+  //TMC2130_Write_Register(&Motor_X, TMC2130_GCONF, 0x00000001UL);  //voltage on AIN is current reference
+  //TMC2130_Write_Register(&Motor_X, TMC2130_IHOLD_IRUN, 0x00001010UL);  //IHOLD=0x10, IRUN=0x10
+  //TMC2130_Write_Register(&Motor_X, TMC2130_CHOPCONF,   0x00008008UL);  //native 256 microsteps, MRES=0, TBL=1=24, TOFF=8
+
+  //TMC_Enable_Driver(&Motor_X_Controller, 1);
 
   /* USER CODE END 2 */
  
@@ -143,9 +164,43 @@ int main(void)
   while (1)
   {
 
+	static uint32_t time_elapsed = 0;
+	uint32_t data;
+	uint8_t s;
+
+	if (HAL_GetTick() - time_elapsed > 100)
+	    {
+
+	    time_elapsed = HAL_GetTick();
+
+	    s = TMC2130_Read_Register(&Motor_X, TMC2130_IOIN);
+	    CLI_UART_Send_String("Status:0x");
+	    CLI_UART_Send_Int_Hex(s);
+
+	    if (s & 0x01)
+		{
+		CLI_UART_Send_String(" reset");
+		}
+	    else if (s & 0x02)
+		{
+		CLI_UART_Send_String(" error");
+		}
+	    else if (s & 0x04)
+		{
+		CLI_UART_Send_String(" sg2");
+		}
+	    else if (s & 0x08)
+		{
+		CLI_UART_Send_String(" standstill");
+		}
+	    CLI_UART_Send_String("\n");
+
+	    }
+      //HAL_GPIO_WritePin(Motor_X.Step_Port, Motor_X.Step_Pin, GPIO_PIN_SET);
+      //Delay_Micros(10);
+      //HAL_GPIO_WritePin(Motor_X.Step_Port, Motor_X.Step_Pin, GPIO_PIN_RESET);
+      //Delay_Micros(10);
     /* USER CODE END WHILE */
-
-
 
     /* USER CODE BEGIN 3 */
   }
