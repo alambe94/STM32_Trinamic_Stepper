@@ -30,6 +30,8 @@
 #include "stdlib.h"
 #include "delay_us.h"
 #include "tmc2130_step_generator.h"
+#include "tmc2130_interface_api.h"
+
 #include "main.h"
 /* USER CODE END Includes */
 
@@ -149,9 +151,10 @@ int main(void)
 
   TMC_Add(&Motor_X_Controller);
 
-  TMC2130_Write_Register(&Motor_X, TMC2130_GCONF, 0x00000001UL);  //voltage on AIN is current reference
-  TMC2130_Write_Register(&Motor_X, TMC2130_IHOLD_IRUN, 0x00001010UL);  //IHOLD=0x10, IRUN=0x10
-  TMC2130_Write_Register(&Motor_X, TMC2130_CHOPCONF,   0x00008008UL);  //native 256 microsteps, MRES=0, TBL=1=24, TOFF=8
+  TMC2130_Set_I_Scale_Analog(&Motor_X, 1);
+  TMC2130_Set_Max_Current(&Motor_X, 0x10);
+  TMC2130_Set_Standby_Current(&Motor_X, 0x10);
+  TMC2130_Set_Microstep(&Motor_X, 128);
 
   TMC_Enable_Driver(&Motor_X_Controller, 1);
 

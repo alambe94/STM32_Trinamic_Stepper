@@ -176,4 +176,6 @@ void TMC2130_Set_Freewheeling_Mode(TMC2130TypeDef *motor_handle, int32_t value);
 int32_t TMC2130_Get_Freewheeling_Mode(TMC2130TypeDef *motor_handle);
 int32_t TMC2130_Get_Load_Value(TMC2130TypeDef *motor_handle);
 
+void TMC2130_Set_I_Scale_Analog(TMC2130TypeDef *motor_handle, int32_t value);
+
 #endif /* SRC_TMC2130_INTERFACE_API_H_ */

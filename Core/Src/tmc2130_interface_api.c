@@ -87,7 +87,7 @@ void TMC2130_Init(TMC2130TypeDef *tmc2130)
     for (i = 0; i < TMC2130_REGISTER_COUNT; i++)
 	{
 	tmc2130->registerAccess[i] = tmc2130_defaultRegisterAccess[i];
-	//TMC2130_Write_Register(tmc2130, i, tmc2130_defaultRegisterResetState[i]);
+	TMC2130_Write_Register(tmc2130, i, tmc2130_defaultRegisterResetState[i]);
 	}
     }
 
