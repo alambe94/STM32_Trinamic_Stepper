@@ -66,18 +66,16 @@ typedef struct
 	// Main code -> interrupt
 	uint32_t newAcceleration;
 	int32_t stepDifference;
-	StepDirMode mode;
 	uint32_t frequency;
 
 	TMC_LinearRamp ramp;
+	StepDirMode mode;
     } StepGeneraorTypedef;
 
 typedef struct TMC2130_Controller_t
     {
 	TMC2130TypeDef* Motor;
 	StepGeneraorTypedef Step_Generator;
-	TMC_LinearRamp Ramp_Calaculator;
-	StepDirMode Mode;
 
     } TMC2130_Controller_t;
 

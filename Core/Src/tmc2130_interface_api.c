@@ -87,7 +87,7 @@ void TMC2130_Init(TMC2130TypeDef *tmc2130)
     for (i = 0; i < TMC2130_REGISTER_COUNT; i++)
 	{
 	tmc2130->registerAccess[i] = tmc2130_defaultRegisterAccess[i];
-	TMC2130_Write_Register(tmc2130, i, tmc2130_defaultRegisterResetState[i]);
+	//TMC2130_Write_Register(tmc2130, i, tmc2130_defaultRegisterResetState[i]);
 	}
     }
 
@@ -119,12 +119,12 @@ void TMC2130_Set_Power_Down(TMC2130TypeDef *motor_handle, int32_t value)
     }
 
 // Speed threshold for high speed mode
-void TMC2130_Set_Speed_Th(TMC2130TypeDef *motor_handle, int32_t value)
+void TMC2130_Set_Speed_Threshold(TMC2130TypeDef *motor_handle, int32_t value)
     {
     value = MIN(0xFFFFF, (1 << 24) / ((value) ? value : 1));
     TMC2130_Write_Register(motor_handle, TMC2130_THIGH, value);
     }
-int32_t TMC2130_Get_Speed_Th(TMC2130TypeDef *motor_handle)
+int32_t TMC2130_Get_Speed_Threshold(TMC2130TypeDef *motor_handle)
     {
     int32_t tempValue;
     tempValue = TMC2130_Read_Register(motor_handle, TMC2130_THIGH);

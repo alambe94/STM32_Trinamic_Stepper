@@ -37,6 +37,12 @@ typedef struct
 
 	GPIO_TypeDef *Enable_Port;
 	uint16_t Enable_Pin;
+
+	GPIO_TypeDef *DIG0_Port;
+	uint16_t DIG0_Pin;
+
+	GPIO_TypeDef *Dig1_Port;
+	uint16_t DIG1_Pin;
 } TMC2130TypeDef;
 
 
@@ -104,8 +110,8 @@ int32_t TMC2130_Get_Max_Current(TMC2130TypeDef *motor_handle);
 void TMC2130_Set_Standby_Current(TMC2130TypeDef *motor_handle, int32_t value);
 int32_t TMC2130_Get_Standby_Current(TMC2130TypeDef *motor_handle);
 void TMC2130_Set_Power_Down(TMC2130TypeDef *motor_handle, int32_t value);
-void TMC2130_Set_Speed_Th(TMC2130TypeDef *motor_handle, int32_t value);
-int32_t TMC2130_Get_Speed_Th(TMC2130TypeDef *motor_handle);
+void TMC2130_Set_Speed_Threshold(TMC2130TypeDef *motor_handle, int32_t value);
+int32_t TMC2130_Get_Speed_Threshold(TMC2130TypeDef *motor_handle);
 void TMC2130_Set_MIN_Speed_dcStep(TMC2130TypeDef *motor_handle, int32_t value);
 int32_t TMC2130_Get_MIN_Speed_dcStep(TMC2130TypeDef *motor_handle);
 void TMC2130_Set_High_Speed_Full_Step_Mode(TMC2130TypeDef *motor_handle,

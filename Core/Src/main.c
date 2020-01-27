@@ -149,11 +149,13 @@ int main(void)
 
   TMC_Add(&Motor_X_Controller);
 
-  //TMC2130_Write_Register(&Motor_X, TMC2130_GCONF, 0x00000001UL);  //voltage on AIN is current reference
-  //TMC2130_Write_Register(&Motor_X, TMC2130_IHOLD_IRUN, 0x00001010UL);  //IHOLD=0x10, IRUN=0x10
-  //TMC2130_Write_Register(&Motor_X, TMC2130_CHOPCONF,   0x00008008UL);  //native 256 microsteps, MRES=0, TBL=1=24, TOFF=8
+  TMC2130_Write_Register(&Motor_X, TMC2130_GCONF, 0x00000001UL);  //voltage on AIN is current reference
+  TMC2130_Write_Register(&Motor_X, TMC2130_IHOLD_IRUN, 0x00001010UL);  //IHOLD=0x10, IRUN=0x10
+  TMC2130_Write_Register(&Motor_X, TMC2130_CHOPCONF,   0x00008008UL);  //native 256 microsteps, MRES=0, TBL=1=24, TOFF=8
 
-  //TMC_Enable_Driver(&Motor_X_Controller, 1);
+  TMC_Enable_Driver(&Motor_X_Controller, 1);
+
+  TMC_TIM_Enable(1);
 
   /* USER CODE END 2 */
  
@@ -164,42 +166,11 @@ int main(void)
   while (1)
   {
 
-	static uint32_t time_elapsed = 0;
-	uint32_t data;
-	uint8_t s;
+      TMC_Move(&Motor_X_Controller, -1000000);
+      HAL_Delay(10000);
+      TMC_Move(&Motor_X_Controller, 1000000);
+      HAL_Delay(10000);
 
-	if (HAL_GetTick() - time_elapsed > 100)
-	    {
-
-	    time_elapsed = HAL_GetTick();
-
-	    s = TMC2130_Read_Register(&Motor_X, TMC2130_IOIN);
-	    CLI_UART_Send_String("Status:0x");
-	    CLI_UART_Send_Int_Hex(s);
-
-	    if (s & 0x01)
-		{
-		CLI_UART_Send_String(" reset");
-		}
-	    else if (s & 0x02)
-		{
-		CLI_UART_Send_String(" error");
-		}
-	    else if (s & 0x04)
-		{
-		CLI_UART_Send_String(" sg2");
-		}
-	    else if (s & 0x08)
-		{
-		CLI_UART_Send_String(" standstill");
-		}
-	    CLI_UART_Send_String("\n");
-
-	    }
-      //HAL_GPIO_WritePin(Motor_X.Step_Port, Motor_X.Step_Pin, GPIO_PIN_SET);
-      //Delay_Micros(10);
-      //HAL_GPIO_WritePin(Motor_X.Step_Port, Motor_X.Step_Pin, GPIO_PIN_RESET);
-      //Delay_Micros(10);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
