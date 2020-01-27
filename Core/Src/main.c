@@ -137,6 +137,8 @@ int main(void)
   MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
 
+  int32_t sts = 0;
+
   Motor_X.CS_Port = SPI_CS_GPIO_Port;
   Motor_X.CS_Pin  = SPI_CS_Pin;
 
@@ -152,9 +154,13 @@ int main(void)
   TMC_Add(&Motor_X_Controller);
 
   TMC2130_Set_I_Scale_Analog(&Motor_X, 1);
-  TMC2130_Set_Max_Current(&Motor_X, 0x10);
-  TMC2130_Set_Standby_Current(&Motor_X, 0x10);
+  TMC2130_Set_Max_Current(&Motor_X, 30);
+  TMC2130_Set_Standby_Current(&Motor_X, 16);
   TMC2130_Set_Microstep(&Motor_X, 128);
+
+  sts = TMC2130_Get_Microstep(&Motor_X);
+  sts = TMC2130_Get_Max_Current(&Motor_X);
+  sts = TMC2130_Get_Standby_Current(&Motor_X);
 
   TMC_Enable_Driver(&Motor_X_Controller, 1);
 

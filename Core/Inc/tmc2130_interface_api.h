@@ -72,7 +72,7 @@ static const int32_t tmc2130_defaultRegisterResetState[TMC2130_REGISTER_COUNT] =
 //   0x42: write, has hardware presets on reset
 static const uint8_t tmc2130_defaultRegisterAccess[TMC2130_REGISTER_COUNT] =
 {
-//  0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F
+      //  0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F
 	0x03, 0x21, ____, ____, 0x01, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, // 0x00 - 0x0F
 	0x02, 0x02, 0x01, 0x02, 0x02, 0x02, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, // 0x10 - 0x1F
 	____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, ____, 0x03, ____, ____, // 0x20 - 0x2F
