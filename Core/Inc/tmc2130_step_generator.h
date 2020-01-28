@@ -85,6 +85,7 @@ void TMC_Enable_Driver(TMC2130_Controller_t *handle, uint8_t enable);
 void TMC_Rotate(TMC2130_Controller_t *handle, int32_t velocity);
 void TMC_Goto(TMC2130_Controller_t *handle, int32_t position);
 void TMC_Move(TMC2130_Controller_t *handle, int32_t steps);
+void TMC_Loop(TMC2130_Controller_t *handle);
 void TMC_Stop(TMC2130_Controller_t *handle, StepDirStop stopType);
 uint8_t TMC_Get_Status(TMC2130_Controller_t *handle);
 void TMC_stallGuard(TMC2130_Controller_t *handle, bool stall);

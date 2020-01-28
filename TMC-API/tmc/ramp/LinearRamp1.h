@@ -9,6 +9,7 @@
 #define TMC_RAMP_LINEARRAMP1_H_
 
 #include "tmc/helpers/API_Header.h"
+#include "Ramp.h"
 
 // Default precision of the calculations. Internal calculations use a precision
 // of 1/TMC_RAMP_LINEAR_PRECISION for acceleration and velocity.

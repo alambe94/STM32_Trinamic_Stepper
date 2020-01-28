@@ -154,7 +154,7 @@ int main(void)
   TMC_Add(&Motor_X_Controller);
 
   TMC2130_Set_I_Scale_Analog(&Motor_X, 1);
-  TMC2130_Set_Max_Current(&Motor_X, 30);
+  TMC2130_Set_Max_Current(&Motor_X, 16);
   TMC2130_Set_Standby_Current(&Motor_X, 16);
   TMC2130_Set_Microstep(&Motor_X, 128);
 
@@ -175,10 +175,17 @@ int main(void)
   while (1)
   {
 
-      TMC_Move(&Motor_X_Controller, -1000000);
-      HAL_Delay(10000);
       TMC_Move(&Motor_X_Controller, 1000000);
-      HAL_Delay(10000);
+      while(!(TMC_Get_Status(&Motor_X_Controller) & STATUS_TARGET_REACHED))
+	  {
+	  TMC_Loop(&Motor_X_Controller);
+	  }
+
+      TMC_Move(&Motor_X_Controller, -1000000);
+      while(!(TMC_Get_Status(&Motor_X_Controller) & STATUS_TARGET_REACHED))
+	  {
+	  TMC_Loop(&Motor_X_Controller);
+	  }
 
     /* USER CODE END WHILE */
 
