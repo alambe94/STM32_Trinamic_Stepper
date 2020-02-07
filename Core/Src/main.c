@@ -146,25 +146,49 @@ int main(void)
   Motor_X.Step_Pin  = STEP_Pin;
 
   Motor_X.Dir_Port = DIR_GPIO_Port;
-  Motor_X.Dir_Pin =DIR_Pin;
+  Motor_X.Dir_Pin = DIR_Pin;
 
   Motor_X.Enable_Port = EN_GPIO_Port;
   Motor_X.Enable_Pin = EN_Pin;
 
   TMC_Add(&Motor_X_Controller);
 
-  TMC2130_Set_I_Scale_Analog(&Motor_X, 1);
-  TMC2130_Set_Max_Current(&Motor_X, 16);
-  TMC2130_Set_Standby_Current(&Motor_X, 16);
-  TMC2130_Set_Microstep(&Motor_X, 128);
+  // set step generator parameters
+  TMC_Set_Acceleration(&Motor_X_Controller, 1000);
+  TMC_Set_MAX_velocity(&Motor_X_Controller, 30000);
+
+
+
+  // set tmc2130 parameters
+  TMC2130_Set_Chpper_Off_Time(&Motor_X, 4);
+  TMC2130_Set_Chopper_Blank_Time(&Motor_X, 24);
+  TMC2130_Set_Max_Current(&Motor_X, 10);
+  TMC2130_Set_Microstep(&Motor_X, 16);
+  TMC2130_Set_SE_Stallth_Speed(&Motor_X, 0xFFFFF);
+  TMC2130_Set_Speed_Threshold(&Motor_X, 0);
+  TMC2130_Set_SEIMIN(&Motor_X, 5);
+  TMC2130_Set_SEHYS(&Motor_X, 2);
+  TMC2130_Set_SEIDN(&Motor_X, 0b01);
+
+
+
+  TMC2130_Set_Stall_Threshold(&Motor_X, 15);
+
 
   sts = TMC2130_Get_Microstep(&Motor_X);
   sts = TMC2130_Get_Max_Current(&Motor_X);
   sts = TMC2130_Get_Standby_Current(&Motor_X);
 
+
+
+
+
   TMC_Enable_Driver(&Motor_X_Controller, 1);
 
   TMC_TIM_Enable(1);
+
+  TMC_Rotate(&Motor_X_Controller, 20000);
+
 
   /* USER CODE END 2 */
  
@@ -175,17 +199,8 @@ int main(void)
   while (1)
   {
 
-      TMC_Move(&Motor_X_Controller, 1000000);
-      while(!(TMC_Get_Status(&Motor_X_Controller) & STATUS_TARGET_REACHED))
-	  {
-	  TMC_Loop(&Motor_X_Controller);
-	  }
 
-      TMC_Move(&Motor_X_Controller, -1000000);
-      while(!(TMC_Get_Status(&Motor_X_Controller) & STATUS_TARGET_REACHED))
-	  {
-	  TMC_Loop(&Motor_X_Controller);
-	  }
+
 
     /* USER CODE END WHILE */
 

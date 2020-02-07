@@ -186,6 +186,13 @@ void TMC2130_Set_I_Scale_Analog(TMC2130TypeDef *motor_handle, int32_t value)
 	    TMC2130_I_SCALE_ANALOG_MASK, TMC2130_I_SCALE_ANALOG_SHIFT, value);
     }
 
+int32_t TMC2130_Get_I_Scale_Analog(TMC2130TypeDef *motor_handle)
+    {
+    return TMC2130_FIELD_READ(motor_handle, TMC2130_GCONF,
+	    TMC2130_I_SCALE_ANALOG_MASK, TMC2130_I_SCALE_ANALOG_SHIFT);
+    }
+
+
 // Microstep Resolution
 void TMC2130_Set_Microstep(TMC2130TypeDef *motor_handle, int32_t value)
     {

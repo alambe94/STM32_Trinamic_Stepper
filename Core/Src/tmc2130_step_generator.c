@@ -237,6 +237,7 @@ void TMC_TIM_Enable(uint8_t enable)
     }
 
 // tim isr 131Khz
+// called from HAL_TIM_PeriodElapsedCallback in stm32f4xx_it.c
 void TMC_TIM_ISR()
     {
 
