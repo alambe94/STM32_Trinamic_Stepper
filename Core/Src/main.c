@@ -192,12 +192,13 @@ int main(void)
   TMC_TIM_Enable(1);
 
 
-  //rorate at fix velocity rpm = 130000/(200*128)
+  //rotate at fix velocity rpm = (130000*60)/(200*128)
   TMC_Rotate(&Motor_X_Controller, 130000);
 
   // wait for stall, sensorless homing
   while(!(TMC_Get_Status(&Motor_X_Controller) & STATUS_STALLED));
 
+  // reset postion
   TMC_Set_Actual_Position(&Motor_X_Controller, 0);
 
   HAL_Delay(2000);
