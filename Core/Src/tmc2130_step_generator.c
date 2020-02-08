@@ -119,14 +119,9 @@
 #include "tmc2130_step_generator.h"
 #include "tmc2130_interface_api.h"
 
-// Reset value for stallguard threshold. Since Stallguard is motor/application-specific we can't choose a good value here,
-// so this value is rather randomly chosen. Leaving it at zero means stall detection turned off.
-#define STALLGUARD_THRESHOLD 0
-
 #define MAX_TMC2130 3
 TMC2130_Controller_t *TMC2130_List[MAX_TMC2130];
 uint8_t TMC2130_List_Count = 0;
-
 
 // configure tim
 // configure in cube to generate 131Khz interrupt. see tim.c
@@ -142,15 +137,17 @@ void TMC_Add(TMC2130_Controller_t *handle)
 	handle->Step_Generator.oldVelAccu = 0;
 	handle->Step_Generator.oldVelocity = 0;
 	handle->Step_Generator.newAcceleration = 0;
-	handle->Step_Generator.stallGuardThreshold = STALLGUARD_THRESHOLD;
 	handle->Step_Generator.mode = STEPDIR_INTERNAL;
 	handle->Step_Generator.frequency = STEPDIR_FREQUENCY;
 	handle->Step_Generator.haltingCondition = 0x00;
 
 	tmc_ramp_linear_init(&handle->Step_Generator.ramp);
-	tmc_ramp_linear_set_precision(&handle->Step_Generator.ramp, STEPDIR_FREQUENCY);
-	tmc_ramp_linear_set_maxVelocity(&handle->Step_Generator.ramp, STEPDIR_MAX_VELOCITY);
-	tmc_ramp_linear_set_acceleration(&handle->Step_Generator.ramp, STEPDIR_MAX_ACCELERATION);
+	tmc_ramp_linear_set_precision(&handle->Step_Generator.ramp,
+		STEPDIR_FREQUENCY);
+	tmc_ramp_linear_set_maxVelocity(&handle->Step_Generator.ramp,
+		STEPDIR_MAX_VELOCITY);
+	tmc_ramp_linear_set_acceleration(&handle->Step_Generator.ramp,
+		STEPDIR_MAX_ACCELERATION);
 
 	TMC2130_Init(handle->Motor);
 
@@ -253,7 +250,8 @@ void TMC_TIM_ISR()
 	    continue;
 
 	// Reset step output (falling edge of last pulse)
-	HAL_GPIO_WritePin(handle->Motor->Step_Port, handle->Motor->Step_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(handle->Motor->Step_Port, handle->Motor->Step_Pin,
+		GPIO_PIN_RESET);
 
 	// Check StallGuard pin if one is registered
 	// if(HAL_GPIO_ReadPin(handle->Motor->DIG0_Port, handle->Motor->DIG0_Pin) == GPIO_PIN_SET)
@@ -265,7 +263,8 @@ void TMC_TIM_ISR()
 	int32_t dx = tmc_ramp_linear_compute(&handle->Step_Generator.ramp);
 
 	// Check targetReached
-	if (tmc_ramp_linear_get_state(&handle->Step_Generator.ramp) == TMC_RAMP_LINEAR_STATE_IDLE)
+	if (tmc_ramp_linear_get_state(&handle->Step_Generator.ramp)
+		== TMC_RAMP_LINEAR_STATE_IDLE)
 	    {
 	    handle->Step_Generator.targetReached = 1;
 	    }
@@ -277,15 +276,18 @@ void TMC_TIM_ISR()
 	// Direction
 	if (dx > 0)
 	    {
-	    HAL_GPIO_WritePin(handle->Motor->Dir_Port, handle->Motor->Dir_Pin, GPIO_PIN_RESET);
+	    HAL_GPIO_WritePin(handle->Motor->Dir_Port, handle->Motor->Dir_Pin,
+		    GPIO_PIN_RESET);
 	    }
 	else
 	    {
-	    HAL_GPIO_WritePin(handle->Motor->Dir_Port, handle->Motor->Dir_Pin, GPIO_PIN_SET);
+	    HAL_GPIO_WritePin(handle->Motor->Dir_Port, handle->Motor->Dir_Pin,
+		    GPIO_PIN_SET);
 	    }
 
 	// Set step output (rising edge of step pulse)
-	HAL_GPIO_WritePin(handle->Motor->Step_Port, handle->Motor->Step_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(handle->Motor->Step_Port, handle->Motor->Step_Pin,
+		GPIO_PIN_SET);
 
 	skipStep:
 	// Synchronised Acceleration update
@@ -297,7 +299,8 @@ void TMC_TIM_ISR()
 		    handle->Step_Generator.newAcceleration);
 	    // Save a snapshot of the velocity
 	    handle->Step_Generator.oldVelocity =
-		    tmc_ramp_linear_get_rampVelocity(&handle->Step_Generator.ramp);
+		    tmc_ramp_linear_get_rampVelocity(
+			    &handle->Step_Generator.ramp);
 
 	    handle->Step_Generator.syncFlag = SYNC_SNAPSHOT_SAVED;
 	    break;
@@ -342,7 +345,8 @@ void TMC_Rotate(TMC2130_Controller_t *handle, int32_t velocity)
 	break;
     case STEPDIR_EXTERNAL:
     default:
-	tmc_ramp_linear_set_targetVelocity(&handle->Step_Generator.ramp, velocity);
+	tmc_ramp_linear_set_targetVelocity(&handle->Step_Generator.ramp,
+		velocity);
 	break;
 	}
     }
@@ -367,22 +371,18 @@ void TMC_Move(TMC2130_Controller_t *handle, int32_t steps)
 void TMC_Loop(TMC2130_Controller_t *handle)
     {
 
-    // Check stallguard velocity threshold
-    if ((handle->Step_Generator.stallGuardThreshold != 0)
-	    && (abs(tmc_ramp_linear_get_rampVelocity(&handle->Step_Generator.ramp))
-		    >= handle->Step_Generator.stallGuardThreshold))
-	{
-	handle->Step_Generator.stallGuardActive = true;
-	}
-    else
-	{
-	handle->Step_Generator.stallGuardActive = false;
-	}
-
     // Check stallGuard
-    if (TMC2130_Read_Register(handle->Motor, TMC2130_DRV_STATUS) & TMC2130_STALLGUARD_MASK)
+    if (TMC2130_Read_Register(handle->Motor,
+    TMC2130_DRV_STATUS) & TMC2130_STALLGUARD_MASK)
 	{
-	TMC_stallGuard(handle, 1);
+	if (handle->Step_Generator.stallGuardActive
+		&& (abs(
+			tmc_ramp_linear_get_rampVelocity(
+				&handle->Step_Generator.ramp))
+			>= handle->Step_Generator.minVelocityForStall))
+	    {
+	    TMC_Stop(handle, STOP_STALL);
+	    }
 	}
 
     }
@@ -414,29 +414,36 @@ uint8_t TMC_Get_Status(TMC2130_Controller_t *handle)
 
     uint8_t status = handle->Step_Generator.haltingCondition;
 
-    status |= (handle->Step_Generator.targetReached) ? STATUS_TARGET_REACHED : 0;
+    status |=
+	    (handle->Step_Generator.targetReached) ? STATUS_TARGET_REACHED : 0;
 
-    status |= (handle->Step_Generator.stallGuardActive) ? STATUS_STALLGUARD_ACTIVE :
-							  0;
-    status |= (tmc_ramp_linear_get_mode(&handle->Step_Generator.ramp)
+    status |=
+	    (handle->Step_Generator.stallGuardActive) ?
+		    STATUS_STALLGUARD_ACTIVE : 0;
+    status |=
+	    (tmc_ramp_linear_get_mode(&handle->Step_Generator.ramp)
 		    == TMC_RAMP_LINEAR_MODE_VELOCITY) ? STATUS_MODE : 0;
 
     return status;
     }
 
-void TMC_stallGuard(TMC2130_Controller_t *handle, bool stall)
+void TMC_Enable_Stall(TMC2130_Controller_t *handle, int32_t minVelocity)
     {
-    if (handle->Step_Generator.stallGuardActive && stall)
-	{
-	TMC_Stop(handle, STOP_STALL);
-	}
+    handle->Step_Generator.stallGuardActive = 1;
+    handle->Step_Generator.minVelocityForStall = minVelocity;
+    }
+
+void TMC_Disable_Stall(TMC2130_Controller_t *handle)
+    {
+    handle->Step_Generator.stallGuardActive = 0;
     }
 
 // ===== Setters =====
 // The setters are responsible to access their respective variables while keeping the ramp generation stable
 
 // Set actual and target position (Not during an active position ramp)
-void TMC_Set_Actual_Position(TMC2130_Controller_t *handle, int32_t actualPosition)
+void TMC_Set_Actual_Position(TMC2130_Controller_t *handle,
+	int32_t actualPosition)
     {
 
     if (tmc_ramp_linear_get_mode(&handle->Step_Generator.ramp)
@@ -486,7 +493,8 @@ void TMC_Set_Acceleration(TMC2130_Controller_t *handle, uint32_t acceleration)
     if (acceleration == 0)
 	return;
 
-    tmc_ramp_linear_set_acceleration(&handle->Step_Generator.ramp, acceleration);
+    tmc_ramp_linear_set_acceleration(&handle->Step_Generator.ramp,
+	    acceleration);
 
     // Store the old acceleration
     uint32_t oldAcceleration = tmc_ramp_linear_get_acceleration(
@@ -534,14 +542,6 @@ void TMC_Set_Acceleration(TMC2130_Controller_t *handle, uint32_t acceleration)
 void TMC_Set_MAX_velocity(TMC2130_Controller_t *handle, int32_t velocityMax)
     {
     tmc_ramp_linear_set_maxVelocity(&handle->Step_Generator.ramp, velocityMax);
-    }
-
-// Set the velocity threshold for active StallGuard. Also reset the stall flag
-void TMC_Set_Stall_Threshold(TMC2130_Controller_t *handle,
-	int32_t stallGuardThreshold)
-    {
-    handle->Step_Generator.stallGuardThreshold = stallGuardThreshold;
-    handle->Step_Generator.haltingCondition &= ~STATUS_STALLED;
     }
 
 void TMC_Set_Frequency(TMC2130_Controller_t *handle, uint32_t frequency)
@@ -593,11 +593,6 @@ uint32_t TMC_Get_Acceleration(TMC2130_Controller_t *handle)
 int32_t TMC_Get_Max_Velocity(TMC2130_Controller_t *handle)
     {
     return tmc_ramp_linear_get_maxVelocity(&handle->Step_Generator.ramp);
-    }
-
-int32_t TMC_Get_Stall_Threshold(TMC2130_Controller_t *handle)
-    {
-    return handle->Step_Generator.stallGuardThreshold;
     }
 
 StepDirMode TMC_Get_Mode(TMC2130_Controller_t *handle)

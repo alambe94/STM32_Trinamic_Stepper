@@ -119,12 +119,12 @@ void TMC2130_Set_Power_Down(TMC2130TypeDef *motor_handle, int32_t value)
     }
 
 // Speed threshold for high speed mode
-void TMC2130_Set_Speed_Threshold(TMC2130TypeDef *motor_handle, int32_t value)
+void TMC2130_Set_THIGH(TMC2130TypeDef *motor_handle, int32_t value)
     {
     value = MIN(0xFFFFF, (1 << 24) / ((value) ? value : 1));
     TMC2130_Write_Register(motor_handle, TMC2130_THIGH, value);
     }
-int32_t TMC2130_Get_Speed_Threshold(TMC2130TypeDef *motor_handle)
+int32_t TMC2130_Get_THIGH(TMC2130TypeDef *motor_handle)
     {
     int32_t tempValue;
     tempValue = TMC2130_Read_Register(motor_handle, TMC2130_THIGH);
@@ -364,72 +364,72 @@ int32_t TMC2130_Get_Chopper_Hysteresis_Offset(TMC2130TypeDef *motor_handle)
     }
 
 // Chopper off time
-void TMC2130_Set_Chpper_Off_Time(TMC2130TypeDef *motor_handle, int32_t value)
+void TMC2130_Set_Chopper_Off_Time(TMC2130TypeDef *motor_handle, int32_t value)
     {
     TMC2130_FIELD_UPDATE(motor_handle, TMC2130_CHOPCONF, TMC2130_TOFF_MASK,
 	    TMC2130_TOFF_SHIFT, value);
     }
-int32_t TMC2130_Get_Chpper_Off_Time(TMC2130TypeDef *motor_handle)
+int32_t TMC2130_Get_Chopper_Off_Time(TMC2130TypeDef *motor_handle)
     {
     return TMC2130_FIELD_READ(motor_handle, TMC2130_CHOPCONF, TMC2130_TOFF_MASK,
 	    TMC2130_TOFF_SHIFT);
     }
 
 // smartEnergy current minimum (SEIMIN)
-void TMC2130_Set_SEIMIN(TMC2130TypeDef *motor_handle, int32_t value)
+void TMC2130_Set_SEMIN_I(TMC2130TypeDef *motor_handle, int32_t value)
     {
     TMC2130_FIELD_UPDATE(motor_handle, TMC2130_COOLCONF, TMC2130_SEIMIN_MASK,
 	    TMC2130_SEIMIN_SHIFT, value);
     }
-int32_t TMC2130_Get_SEIMIN(TMC2130TypeDef *motor_handle)
+int32_t TMC2130_Get_SEMIN_I(TMC2130TypeDef *motor_handle)
     {
     return TMC2130_FIELD_READ(motor_handle, TMC2130_COOLCONF,
 	    TMC2130_SEIMIN_MASK, TMC2130_SEIMIN_SHIFT);
     }
 
 // smartEnergy current down step
-void TMC2130_Set_SEIDN(TMC2130TypeDef *motor_handle, int32_t value)
+void TMC2130_Set_SEDN_I(TMC2130TypeDef *motor_handle, int32_t value)
     {
     TMC2130_FIELD_UPDATE(motor_handle, TMC2130_COOLCONF, TMC2130_SEDN_MASK,
 	    TMC2130_SEDN_SHIFT, value);
     }
-int32_t TMC2130_Get_SEIDN(TMC2130TypeDef *motor_handle)
+int32_t TMC2130_Get_SEDN_I(TMC2130TypeDef *motor_handle)
     {
     return TMC2130_FIELD_READ(motor_handle, TMC2130_COOLCONF, TMC2130_SEDN_MASK,
 	    TMC2130_SEDN_SHIFT);
     }
 
 // smartEnergy hysteresis
-void TMC2130_Set_SEHYS(TMC2130TypeDef *motor_handle, int32_t value)
+void TMC2130_Set_SEMAX(TMC2130TypeDef *motor_handle, int32_t value)
     {
     TMC2130_FIELD_UPDATE(motor_handle, TMC2130_COOLCONF, TMC2130_SEMAX_MASK,
 	    TMC2130_SEMAX_SHIFT, value);
     }
-int32_t TMC2130_Get_SEHYS(TMC2130TypeDef *motor_handle)
+int32_t TMC2130_Get_SEMAX(TMC2130TypeDef *motor_handle)
     {
     return TMC2130_FIELD_READ(motor_handle, TMC2130_COOLCONF,
 	    TMC2130_SEMAX_MASK, TMC2130_SEMAX_SHIFT);
     }
 
 // smartEnergy current up step
-void TMC2130_Set_SEIU(TMC2130TypeDef *motor_handle, int32_t value)
+void TMC2130_Set_SEUP_I(TMC2130TypeDef *motor_handle, int32_t value)
     {
     TMC2130_FIELD_UPDATE(motor_handle, TMC2130_COOLCONF, TMC2130_SEUP_MASK,
 	    TMC2130_SEUP_SHIFT, value);
     }
-int32_t TMC2130_Get_SEIU(TMC2130TypeDef *motor_handle)
+int32_t TMC2130_Get_SEUP_I(TMC2130TypeDef *motor_handle)
     {
     return TMC2130_FIELD_READ(motor_handle, TMC2130_COOLCONF, TMC2130_SEUP_MASK,
 	    TMC2130_SEUP_SHIFT);
     }
 
 // smartEnergy hysteresis start
-void TMC2130_Set_SEHYS_Start(TMC2130TypeDef *motor_handle, int32_t value)
+void TMC2130_Set_SEMIN(TMC2130TypeDef *motor_handle, int32_t value)
     {
     TMC2130_FIELD_UPDATE(motor_handle, TMC2130_COOLCONF, TMC2130_SEMIN_MASK,
 	    TMC2130_SEMIN_SHIFT, value);
     }
-int32_t TMC2130_Get_SEHYS_Start(TMC2130TypeDef *motor_handle)
+int32_t TMC2130_Get_SEMIN(TMC2130TypeDef *motor_handle)
     {
     return TMC2130_FIELD_READ(motor_handle, TMC2130_COOLCONF,
 	    TMC2130_SEMIN_MASK, TMC2130_SEMIN_SHIFT);
@@ -482,12 +482,12 @@ int32_t TMC2130_Get_SE_Actual_Current(TMC2130TypeDef *motor_handle)
     }
 
 // smartEnergy threshold speed
-void TMC2130_Set_SE_Stallth_Speed(TMC2130TypeDef *motor_handle, int32_t value)
+void TMC2130_Set_TCOOLTHRS(TMC2130TypeDef *motor_handle, int32_t value)
     {
     value = MIN(0xFFFFF, (1 << 24) / ((value) ? value : 1));
     TMC2130_Write_Register(motor_handle, TMC2130_TCOOLTHRS, value);
     }
-int32_t TMC2130_Get_SE_Stallth_Speed(TMC2130TypeDef *motor_handle)
+int32_t TMC2130_Get_TCOOLTHRS(TMC2130TypeDef *motor_handle)
     {
     int32_t retvalue;
     int32_t tempValue = TMC2130_Read_Register(motor_handle, TMC2130_TCOOLTHRS);

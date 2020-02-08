@@ -154,25 +154,26 @@ int main(void)
   TMC_Add(&Motor_X_Controller);
 
   // set step generator parameters
-  TMC_Set_Acceleration(&Motor_X_Controller, 1000);
-  TMC_Set_MAX_velocity(&Motor_X_Controller, 30000);
+  TMC_Set_Acceleration(&Motor_X_Controller, 130000);
+  TMC_Set_MAX_velocity(&Motor_X_Controller, 130000);
+  TMC_Enable_Stall(&Motor_X_Controller, 100000);
 
 
 
   // set tmc2130 parameters
-  TMC2130_Set_Chpper_Off_Time(&Motor_X, 4);
+  TMC2130_Set_Chopper_Off_Time(&Motor_X, 4);
   TMC2130_Set_Chopper_Blank_Time(&Motor_X, 24);
   TMC2130_Set_Max_Current(&Motor_X, 10);
-  TMC2130_Set_Microstep(&Motor_X, 16);
-  TMC2130_Set_SE_Stallth_Speed(&Motor_X, 0xFFFFF);
-  TMC2130_Set_Speed_Threshold(&Motor_X, 0);
-  TMC2130_Set_SEIMIN(&Motor_X, 5);
-  TMC2130_Set_SEHYS(&Motor_X, 2);
-  TMC2130_Set_SEIDN(&Motor_X, 0b01);
+  TMC2130_Set_Microstep(&Motor_X, 64);
+  TMC2130_Set_TCOOLTHRS(&Motor_X, 0xFFFFF);
+  TMC2130_Set_THIGH(&Motor_X, 0);
+  TMC2130_Set_SEMIN_I(&Motor_X, 5);
+  TMC2130_Set_SEMAX(&Motor_X, 2);
+  TMC2130_Set_SEDN_I(&Motor_X, 0b01);
 
 
 
-  TMC2130_Set_Stall_Threshold(&Motor_X, 15);
+  TMC2130_Set_Stall_Threshold(&Motor_X, 10);
 
 
   sts = TMC2130_Get_Microstep(&Motor_X);
@@ -187,7 +188,8 @@ int main(void)
 
   TMC_TIM_Enable(1);
 
-  TMC_Rotate(&Motor_X_Controller, 20000);
+  TMC_Rotate(&Motor_X_Controller, 800*128);
+  //TMC_Move(&Motor_X_Controller, 2000000);
 
 
   /* USER CODE END 2 */
@@ -196,8 +198,19 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  int32_t load = 0;
   while (1)
   {
+
+
+  TMC_Loop(&Motor_X_Controller);
+
+  load = TMC2130_Get_Load_Value(&Motor_X);
+
+  CLI_UART_Send_Int(load);
+  CLI_UART_Send_Char('\n');
+
 
 
 
