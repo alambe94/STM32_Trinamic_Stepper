@@ -84,10 +84,15 @@ void TMC2130_Init(TMC2130TypeDef *tmc2130)
     {
 
     size_t i;
+    uint8_t address;
     for (i = 0; i < TMC2130_REGISTER_COUNT; i++)
 	{
+
 	tmc2130->registerAccess[i] = tmc2130_defaultRegisterAccess[i];
-	TMC2130_Write_Register(tmc2130, i, tmc2130_defaultRegisterResetState[i]);
+
+	// Write to the shadow
+	address = TMC_ADDRESS(i);
+	tmc2130->shadowRegister[address] = TMC2130_Read_Register(tmc2130, address);
 	}
     }
 

@@ -163,8 +163,9 @@ int main(void)
   // set tmc2130 parameters
   TMC2130_Set_Chopper_Off_Time(&Motor_X, 4);
   TMC2130_Set_Chopper_Blank_Time(&Motor_X, 24);
-  TMC2130_Set_Max_Current(&Motor_X, 10);
-  TMC2130_Set_Microstep(&Motor_X, 64);
+  TMC2130_Set_Max_Current(&Motor_X, 5);
+  TMC2130_Set_Standby_Current(&Motor_X, 5);
+  TMC2130_Set_Microstep(&Motor_X, 256);
   TMC2130_Set_TCOOLTHRS(&Motor_X, 0xFFFFF);
   TMC2130_Set_THIGH(&Motor_X, 0);
   TMC2130_Set_SEMIN_I(&Motor_X, 5);
@@ -173,7 +174,7 @@ int main(void)
 
 
 
-  TMC2130_Set_Stall_Threshold(&Motor_X, 10);
+  TMC2130_Set_Stall_Threshold(&Motor_X, 12);
 
 
   sts = TMC2130_Get_Microstep(&Motor_X);
@@ -183,13 +184,12 @@ int main(void)
 
 
 
-
   TMC_Enable_Driver(&Motor_X_Controller, 1);
 
   TMC_TIM_Enable(1);
 
-  TMC_Rotate(&Motor_X_Controller, 800*128);
-  //TMC_Move(&Motor_X_Controller, 2000000);
+  TMC_Rotate(&Motor_X_Controller, 500*256);
+  //TMC_Move(&Motor_X_Controller, 256*200*100); // move 100 revolution
 
 
   /* USER CODE END 2 */
