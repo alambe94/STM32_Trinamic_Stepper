@@ -134,6 +134,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_SPI1_Init();
+  MX_TIM10_Init();
   MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
 
@@ -156,6 +157,8 @@ int main(void)
   // set step generator parameters
   TMC_Set_Acceleration(&Motor_X_Controller, 130000);
   TMC_Set_MAX_velocity(&Motor_X_Controller, 130000);
+
+
   TMC_Enable_Stall(&Motor_X_Controller, 100000);
 
 
@@ -165,7 +168,7 @@ int main(void)
   TMC2130_Set_Chopper_Blank_Time(&Motor_X, 24);
   TMC2130_Set_Max_Current(&Motor_X, 5);
   TMC2130_Set_Standby_Current(&Motor_X, 5);
-  TMC2130_Set_Microstep(&Motor_X, 256);
+  TMC2130_Set_Microstep(&Motor_X, 128);
   TMC2130_Set_TCOOLTHRS(&Motor_X, 0xFFFFF);
   TMC2130_Set_THIGH(&Motor_X, 0);
   TMC2130_Set_SEMIN_I(&Motor_X, 5);
@@ -188,9 +191,16 @@ int main(void)
 
   TMC_TIM_Enable(1);
 
-  TMC_Rotate(&Motor_X_Controller, 500*256);
-  //TMC_Move(&Motor_X_Controller, 256*200*100); // move 100 revolution
 
+  //rorate at fix velocity rpm = 130000/(200*128)
+  TMC_Rotate(&Motor_X_Controller, 130000);
+
+  // wait for stall, sensorless homing
+  while(!(TMC_Get_Status(&Motor_X_Controller) & STATUS_STALLED));
+
+  TMC_Set_Actual_Position(&Motor_X_Controller, 0);
+
+  HAL_Delay(2000);
 
   /* USER CODE END 2 */
  
@@ -199,21 +209,18 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  int32_t load = 0;
   while (1)
   {
 
+  TMC_Move(&Motor_X_Controller, -128*200*10); // move xx revolution
 
-  TMC_Loop(&Motor_X_Controller);
+  while(!(TMC_Get_Status(&Motor_X_Controller) & STATUS_TARGET_REACHED))
+  HAL_Delay(10);
 
-  load = TMC2130_Get_Load_Value(&Motor_X);
+  TMC_Move(&Motor_X_Controller, 128*200*10); // move xx revolution
+  while(!(TMC_Get_Status(&Motor_X_Controller) & STATUS_TARGET_REACHED))
 
-  CLI_UART_Send_Int(load);
-  CLI_UART_Send_Char('\n');
-
-
-
-
+  HAL_Delay(10);
 
     /* USER CODE END WHILE */
 

@@ -88,6 +88,7 @@ void TMC_Move(TMC2130_Controller_t *handle, int32_t steps);
 void TMC_Loop(TMC2130_Controller_t *handle);
 void TMC_Stop(TMC2130_Controller_t *handle, StepDirStop stopType);
 uint8_t TMC_Get_Status(TMC2130_Controller_t *handle);
+uint8_t TMC_Target_Reached(TMC2130_Controller_t *handle);
 void TMC_Enable_Stall(TMC2130_Controller_t *handle, int32_t minVelocity);
 void TMC_Disable_Stall(TMC2130_Controller_t *handle);
 void TMC_Set_Actual_Position(TMC2130_Controller_t *handle, int32_t actualPosition);

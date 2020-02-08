@@ -221,24 +221,29 @@ int32_t calculateStepDifference(int32_t velocity, uint32_t oldAccel,
     }
 
 extern TIM_HandleTypeDef htim11;
+extern TIM_HandleTypeDef htim10;
 void TMC_TIM_Enable(uint8_t enable)
     {
     if (enable)
 	{
 	HAL_TIM_Base_Start_IT(&htim11);
+	HAL_TIM_Base_Start_IT(&htim10);
 	}
     else
 	{
 	HAL_TIM_Base_Stop_IT(&htim11);
+	HAL_TIM_Base_Stop_IT(&htim10);
 	}
     }
 
 // tim isr 131Khz
 // called from HAL_TIM_PeriodElapsedCallback in stm32f4xx_it.c
-void TMC_TIM_ISR()
+void TMC_Main_ISR()
     {
 
     TMC2130_Controller_t *handle = NULL;
+
+    uint8_t active_motors = 0;
 
     for (uint8_t i = 0; i < TMC2130_List_Count; i++)
 	{
@@ -248,6 +253,9 @@ void TMC_TIM_ISR()
 	// If any halting condition is present, abort immediately
 	if (handle->Step_Generator.haltingCondition)
 	    continue;
+
+	// at least one motor is active
+	active_motors++;
 
 	// Reset step output (falling edge of last pulse)
 	HAL_GPIO_WritePin(handle->Motor->Step_Port, handle->Motor->Step_Pin,
@@ -261,13 +269,6 @@ void TMC_TIM_ISR()
 
 	// Compute ramp
 	int32_t dx = tmc_ramp_linear_compute(&handle->Step_Generator.ramp);
-
-	// Check targetReached
-	if (tmc_ramp_linear_get_state(&handle->Step_Generator.ramp)
-		== TMC_RAMP_LINEAR_STATE_IDLE)
-	    {
-	    handle->Step_Generator.targetReached = 1;
-	    }
 
 	// Step
 	if (dx == 0) // No change in position -> skip step generation
@@ -313,6 +314,29 @@ void TMC_TIM_ISR()
 	    break;
 	    }
 	}
+
+    // zero motor active disable isr
+    if(!active_motors)
+	{
+	//HAL_TIM_Base_Stop_IT(&htim11);
+	}
+    }
+
+// tim isr 100hz
+// called from HAL_TIM_PeriodElapsedCallback in stm32f4xx_it.c
+void TMC_LOOP_ISR()
+    {
+
+    TMC2130_Controller_t *handle = NULL;
+
+    for (uint8_t i = 0; i < TMC2130_List_Count; i++)
+	{
+
+	handle = TMC2130_List[i];
+
+	TMC_Loop(handle);
+	}
+
     }
 
 void TMC_Enable_Driver(TMC2130_Controller_t *handle, uint8_t enable)
@@ -332,7 +356,7 @@ void TMC_Enable_Driver(TMC2130_Controller_t *handle, uint8_t enable)
 void TMC_Rotate(TMC2130_Controller_t *handle, int32_t velocity)
     {
 
-    handle->Step_Generator.targetReached = 0;
+    handle->Step_Generator.haltingCondition = 0;
 
     // Set the rampmode first - other way around might cause issues
     tmc_ramp_linear_set_mode(&handle->Step_Generator.ramp,
@@ -354,7 +378,7 @@ void TMC_Rotate(TMC2130_Controller_t *handle, int32_t velocity)
 void TMC_Goto(TMC2130_Controller_t *handle, int32_t position)
     {
 
-    handle->Step_Generator.targetReached = 0;
+    handle->Step_Generator.haltingCondition = 0;
 
     tmc_ramp_linear_set_mode(&handle->Step_Generator.ramp,
 	    TMC_RAMP_LINEAR_MODE_POSITION);
@@ -414,6 +438,13 @@ uint8_t TMC_Get_Status(TMC2130_Controller_t *handle)
 
     uint8_t status = handle->Step_Generator.haltingCondition;
 
+    handle->Step_Generator.targetReached = 0;
+
+    if(TMC_Target_Reached(handle))
+	{
+	handle->Step_Generator.targetReached = 1;
+	}
+
     status |=
 	    (handle->Step_Generator.targetReached) ? STATUS_TARGET_REACHED : 0;
 
@@ -425,6 +456,33 @@ uint8_t TMC_Get_Status(TMC2130_Controller_t *handle)
 		    == TMC_RAMP_LINEAR_MODE_VELOCITY) ? STATUS_MODE : 0;
 
     return status;
+    }
+
+uint8_t TMC_Target_Reached(TMC2130_Controller_t *handle)
+    {
+
+    uint8_t xreturn = 0;
+
+    if(tmc_ramp_linear_get_mode(&handle->Step_Generator.ramp) == TMC_RAMP_LINEAR_MODE_POSITION)
+	{
+
+	if(tmc_ramp_linear_get_rampPosition(&handle->Step_Generator.ramp) == tmc_ramp_linear_get_targetPosition(&handle->Step_Generator.ramp))
+	    {
+	    xreturn = 1;
+	    }
+	}
+    else
+	{
+
+	if(tmc_ramp_linear_get_rampVelocity(&handle->Step_Generator.ramp) == tmc_ramp_linear_get_targetVelocity(&handle->Step_Generator.ramp))
+	    {
+	    xreturn = 1;
+	    }
+
+	}
+
+return xreturn;
+
     }
 
 void TMC_Enable_Stall(TMC2130_Controller_t *handle, int32_t minVelocity)
