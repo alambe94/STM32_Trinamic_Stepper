@@ -70,6 +70,8 @@ void Error_Handler(void);
 #define STEP_GPIO_Port GPIOC
 #define DIR_Pin GPIO_PIN_8
 #define DIR_GPIO_Port GPIOC
+#define DIAG1_Pin GPIO_PIN_9
+#define DIAG1_GPIO_Port GPIOC
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14

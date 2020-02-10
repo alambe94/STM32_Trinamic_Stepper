@@ -20,6 +20,19 @@
 #define TMC2130_FIELD_UPDATE(tdef, address, mask, shift, value) \
 	(TMC2130_Write_Register(tdef, address, FIELD_SET(TMC2130_Read_Register(tdef, address), mask, shift, value)))
 
+
+typedef enum DIAG_Attribute
+    {
+    DIAG_ERROR,
+    DIAG_OTPW,
+    DIAG_STALL,
+    DIAG_INDEX,
+    DIAG_ON_STATE,
+    DIAG_STEPS_SKIPPED,
+    DIAG_PUSHPULL,
+    }DIAG_Attribute_t;
+
+
 // Typedefs
 typedef struct
 {
@@ -38,11 +51,11 @@ typedef struct
 	GPIO_TypeDef *Enable_Port;
 	uint16_t Enable_Pin;
 
-	GPIO_TypeDef *DIG0_Port;
-	uint16_t DIG0_Pin;
+	GPIO_TypeDef *Diag0_Port;
+	uint16_t Diag0_Pin;
 
-	GPIO_TypeDef *Dig1_Port;
-	uint16_t DIG1_Pin;
+	GPIO_TypeDef *Diag1_Port;
+	uint16_t Diag1_Pin;
 } TMC2130TypeDef;
 
 
@@ -178,5 +191,8 @@ int32_t TMC2130_Get_Load_Value(TMC2130TypeDef *motor_handle);
 
 void TMC2130_Set_I_Scale_Analog(TMC2130TypeDef *motor_handle, int32_t value);
 int32_t TMC2130_Get_I_Scale_Analog(TMC2130TypeDef *motor_handle);
+
+void TMC2130_Set_DIAG0_Attribute(TMC2130TypeDef *motor_handle, DIAG_Attribute_t attr, uint8_t enable);
+void TMC2130_Set_DIAG1_Attribute(TMC2130TypeDef *motor_handle, DIAG_Attribute_t attr, uint8_t enable);
 
 #endif /* SRC_TMC2130_INTERFACE_API_H_ */

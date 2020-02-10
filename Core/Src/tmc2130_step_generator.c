@@ -261,12 +261,6 @@ void TMC_Main_ISR()
 	HAL_GPIO_WritePin(handle->Motor->Step_Port, handle->Motor->Step_Pin,
 		GPIO_PIN_RESET);
 
-	// Check StallGuard pin if one is registered
-	// if(HAL_GPIO_ReadPin(handle->Motor->DIG0_Port, handle->Motor->DIG0_Pin) == GPIO_PIN_SET)
-	//     {
-	//     TMC_stallGuard(handle, 1);
-	//     }
-
 	// Compute ramp
 	int32_t dx = tmc_ramp_linear_compute(&handle->Step_Generator.ramp);
 
@@ -396,8 +390,21 @@ void TMC_Loop(TMC2130_Controller_t *handle)
     {
 
     // Check stallGuard
-    if (TMC2130_Read_Register(handle->Motor,
+/*    if (TMC2130_Read_Register(handle->Motor,
     TMC2130_DRV_STATUS) & TMC2130_STALLGUARD_MASK)
+	{
+	if (handle->Step_Generator.stallGuardActive
+		&& (abs(
+			tmc_ramp_linear_get_rampVelocity(
+				&handle->Step_Generator.ramp))
+			>= handle->Step_Generator.minVelocityForStall))
+	    {
+	    TMC_Stop(handle, STOP_STALL);
+	    }
+	}*/
+
+    // Check StallGuard pin if one is registered
+    if (HAL_GPIO_ReadPin(handle->Motor->Diag1_Port, handle->Motor->Diag1_Pin) == GPIO_PIN_RESET)
 	{
 	if (handle->Step_Generator.stallGuardActive
 		&& (abs(

@@ -613,3 +613,71 @@ int32_t TMC2130_Get_Load_Value(TMC2130TypeDef *motor_handle)
     return TMC2130_FIELD_READ(motor_handle, TMC2130_DRV_STATUS,
 	    TMC2130_SG_RESULT_MASK, TMC2130_SG_RESULT_SHIFT);
     }
+
+// set diag0 attribute
+void TMC2130_Set_DIAG0_Attribute(TMC2130TypeDef *motor_handle, DIAG_Attribute_t attr, uint8_t enable)
+    {
+
+    uint32_t mask;
+    uint32_t shift;
+    switch(attr)
+	{
+    case DIAG_ERROR:
+	mask = TMC2130_DIAG0_ERROR_ONLY_WITH_SD_MODE1_MASK;
+	shift = TMC2130_DIAG0_ERROR_ONLY_WITH_SD_MODE1_SHIFT;
+	break;
+    case DIAG_OTPW:
+	mask = TMC2130_DIAG0_OTPW_ONLY_WITH_SD_MODE1_MASK;
+	shift = TMC2130_DIAG0_OTPW_ONLY_WITH_SD_MODE1_SHIFT;
+	break;
+    case DIAG_STALL:
+	mask = TMC2130_DIAG0_STALL_MASK;
+	shift = TMC2130_DIAG0_STALL_SHIFT;
+	break;
+    case DIAG_PUSHPULL:
+	mask = TMC2130_DIAG0_INT_PUSHPULL_MASK;
+	shift = TMC2130_DIAG0_INT_PUSHPULL_SHIFT;
+	break;
+
+   default:
+	break;
+	}
+
+    TMC2130_FIELD_UPDATE(motor_handle, TMC2130_GCONF, mask, shift, enable);
+    }
+
+// set diag1 attribute
+void TMC2130_Set_DIAG1_Attribute(TMC2130TypeDef *motor_handle, DIAG_Attribute_t attr, uint8_t enable)
+    {
+
+    uint32_t mask;
+    uint32_t shift;
+    switch(attr)
+	{
+    case DIAG_STALL:
+	mask = TMC2130_DIAG1_STALL_MASK;
+	shift = TMC2130_DIAG1_STALL_SHIFT;
+	break;
+    case DIAG_INDEX:
+	mask = TMC2130_DIAG1_INDEX_SHIFT;
+	shift = TMC2130_DIAG1_ONSTATE_MASK;
+	break;
+    case DIAG_ON_STATE:
+	mask = TMC2130_DIAG1_ONSTATE_MASK;
+	shift = TMC2130_DIAG1_ONSTATE_SHIFT;
+	break;
+    case DIAG_STEPS_SKIPPED:
+	mask = TMC2130_DIAG1_STEPS_SKIPPED_MASK;
+	shift = TMC2130_DIAG1_STEPS_SKIPPED_SHIFT;
+	break;
+    case DIAG_PUSHPULL:
+	mask = TMC2130_DIAG1_POSCOMP_PUSHPULL_MASK;
+	shift = TMC2130_DIAG1_POSCOMP_PUSHPULL_SHIFT;
+	break;
+
+    default:
+ 	break;
+	}
+
+    TMC2130_FIELD_UPDATE(motor_handle, TMC2130_GCONF, mask, shift, enable);
+    }

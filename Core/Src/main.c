@@ -152,6 +152,9 @@ int main(void)
   Motor_X.Enable_Port = EN_GPIO_Port;
   Motor_X.Enable_Pin = EN_Pin;
 
+  Motor_X.Diag1_Port = DIAG1_GPIO_Port;
+  Motor_X.Diag1_Pin = DIAG1_Pin;
+
   TMC_Add(&Motor_X_Controller);
 
   // set step generator parameters
@@ -180,6 +183,10 @@ int main(void)
   TMC2130_Set_Stall_Threshold(&Motor_X, 12);
 
 
+  // config diag1 for stall
+  TMC2130_Set_DIAG1_Attribute(&Motor_X, DIAG_STALL, 1);
+
+
   sts = TMC2130_Get_Microstep(&Motor_X);
   sts = TMC2130_Get_Max_Current(&Motor_X);
   sts = TMC2130_Get_Standby_Current(&Motor_X);
@@ -193,7 +200,7 @@ int main(void)
 
 
   //rotate at fix velocity rpm = (130000*60)/(200*128)
-  TMC_Rotate(&Motor_X_Controller, 130000);
+  TMC_Rotate(&Motor_X_Controller, 100000);
 
   // wait for stall, sensorless homing
   while(!(TMC_Get_Status(&Motor_X_Controller) & STATUS_STALLED));
@@ -213,12 +220,12 @@ int main(void)
   while (1)
   {
 
-  TMC_Move(&Motor_X_Controller, -128*200*10); // move xx revolution
+  TMC_Move(&Motor_X_Controller, -128*200*1); // move xx revolution
 
   while(!(TMC_Get_Status(&Motor_X_Controller) & STATUS_TARGET_REACHED))
   HAL_Delay(10);
 
-  TMC_Move(&Motor_X_Controller, 128*200*10); // move xx revolution
+  TMC_Move(&Motor_X_Controller, 128*200*1); // move xx revolution
   while(!(TMC_Get_Status(&Motor_X_Controller) & STATUS_TARGET_REACHED))
 
   HAL_Delay(10);
