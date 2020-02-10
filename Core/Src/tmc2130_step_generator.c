@@ -389,8 +389,8 @@ void TMC_Move(TMC2130_Controller_t *handle, int32_t steps)
 void TMC_Loop(TMC2130_Controller_t *handle)
     {
 
-    // Check stallGuard
-/*    if (TMC2130_Read_Register(handle->Motor,
+    // Check stallGuard from spi
+    if (TMC2130_Read_Register(handle->Motor,
     TMC2130_DRV_STATUS) & TMC2130_STALLGUARD_MASK)
 	{
 	if (handle->Step_Generator.stallGuardActive
@@ -401,9 +401,10 @@ void TMC_Loop(TMC2130_Controller_t *handle)
 	    {
 	    TMC_Stop(handle, STOP_STALL);
 	    }
-	}*/
+	}
 
-    // Check StallGuard pin if one is registered
+    // Check stallGuard from diag pin
+/*
     if (HAL_GPIO_ReadPin(handle->Motor->Diag1_Port, handle->Motor->Diag1_Pin) == GPIO_PIN_RESET)
 	{
 	if (handle->Step_Generator.stallGuardActive
@@ -415,6 +416,7 @@ void TMC_Loop(TMC2130_Controller_t *handle)
 	    TMC_Stop(handle, STOP_STALL);
 	    }
 	}
+*/
 
     }
 
