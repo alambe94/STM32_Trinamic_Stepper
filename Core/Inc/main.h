@@ -64,20 +64,30 @@ void Error_Handler(void);
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
 #define USART_RX_GPIO_Port GPIOA
-#define EN_Pin GPIO_PIN_5
-#define EN_GPIO_Port GPIOC
-#define STEP_Pin GPIO_PIN_6
-#define STEP_GPIO_Port GPIOC
-#define DIR_Pin GPIO_PIN_8
-#define DIR_GPIO_Port GPIOC
-#define DIAG1_Pin GPIO_PIN_9
-#define DIAG1_GPIO_Port GPIOC
+#define EN_X_Pin GPIO_PIN_5
+#define EN_X_GPIO_Port GPIOC
+#define STEP_X_Pin GPIO_PIN_6
+#define STEP_X_GPIO_Port GPIOC
+#define DIR_X_Pin GPIO_PIN_8
+#define DIR_X_GPIO_Port GPIOC
+#define DIAG0_X_Pin GPIO_PIN_9
+#define DIAG0_X_GPIO_Port GPIOC
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
-#define SPI_CS_Pin GPIO_PIN_6
-#define SPI_CS_GPIO_Port GPIOB
+#define EN_Y_Pin GPIO_PIN_11
+#define EN_Y_GPIO_Port GPIOC
+#define DIR_Y_Pin GPIO_PIN_12
+#define DIR_Y_GPIO_Port GPIOC
+#define STEP_Y_Pin GPIO_PIN_2
+#define STEP_Y_GPIO_Port GPIOD
+#define DIAG0_Y_Pin GPIO_PIN_3
+#define DIAG0_Y_GPIO_Port GPIOB
+#define SPI_CS_Y_Pin GPIO_PIN_4
+#define SPI_CS_Y_GPIO_Port GPIOB
+#define SPI_CS_X_Pin GPIO_PIN_6
+#define SPI_CS_X_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

@@ -271,12 +271,12 @@ void TMC_Main_ISR()
 	// Direction
 	if (dx > 0)
 	    {
-	    HAL_GPIO_WritePin(handle->Motor->Dir_Port, handle->Motor->Dir_Pin,
+	    HAL_GPIO_WritePin(handle->Motor->DIR_Port, handle->Motor->DIR_Pin,
 		    GPIO_PIN_RESET);
 	    }
 	else
 	    {
-	    HAL_GPIO_WritePin(handle->Motor->Dir_Port, handle->Motor->Dir_Pin,
+	    HAL_GPIO_WritePin(handle->Motor->DIR_Port, handle->Motor->DIR_Pin,
 		    GPIO_PIN_SET);
 	    }
 
@@ -405,7 +405,7 @@ void TMC_Loop(TMC2130_Controller_t *handle)
 
     // Check stallGuard from diag pin
 /*
-    if (HAL_GPIO_ReadPin(handle->Motor->Diag1_Port, handle->Motor->Diag1_Pin) == GPIO_PIN_RESET)
+    if (HAL_GPIO_ReadPin(handle->Motor->DIAG0_Port, handle->Motor->DIAG0_Pin) == GPIO_PIN_RESET)
 	{
 	if (handle->Step_Generator.stallGuardActive
 		&& (abs(

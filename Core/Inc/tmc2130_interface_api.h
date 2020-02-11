@@ -45,17 +45,17 @@ typedef struct
 	GPIO_TypeDef *Step_Port;
 	uint16_t Step_Pin;
 
-	GPIO_TypeDef *Dir_Port;
-	uint16_t Dir_Pin;
+	GPIO_TypeDef *DIR_Port;
+	uint16_t DIR_Pin;
 
 	GPIO_TypeDef *Enable_Port;
 	uint16_t Enable_Pin;
 
-	GPIO_TypeDef *Diag0_Port;
-	uint16_t Diag0_Pin;
+	GPIO_TypeDef *DIAG0_Port;
+	uint16_t DIAG0_Pin;
 
-	GPIO_TypeDef *Diag1_Port;
-	uint16_t Diag1_Pin;
+	GPIO_TypeDef *DIAG1_Port;
+	uint16_t DIAG1_Pin;
 } TMC2130TypeDef;
 
 

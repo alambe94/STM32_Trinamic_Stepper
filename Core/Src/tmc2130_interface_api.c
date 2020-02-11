@@ -618,8 +618,8 @@ int32_t TMC2130_Get_Load_Value(TMC2130TypeDef *motor_handle)
 void TMC2130_Set_DIAG0_Attribute(TMC2130TypeDef *motor_handle, DIAG_Attribute_t attr, uint8_t enable)
     {
 
-    uint32_t mask;
-    uint32_t shift;
+    uint32_t mask = 0xFFFFFFFF;
+    uint32_t shift = 0;
     switch(attr)
 	{
     case DIAG_ERROR:
@@ -650,8 +650,8 @@ void TMC2130_Set_DIAG0_Attribute(TMC2130TypeDef *motor_handle, DIAG_Attribute_t 
 void TMC2130_Set_DIAG1_Attribute(TMC2130TypeDef *motor_handle, DIAG_Attribute_t attr, uint8_t enable)
     {
 
-    uint32_t mask;
-    uint32_t shift;
+    uint32_t mask = 0xFFFFFFFF;
+    uint32_t shift = 0;
     switch(attr)
 	{
     case DIAG_STALL:
