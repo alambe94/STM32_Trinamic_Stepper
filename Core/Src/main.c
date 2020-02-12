@@ -128,8 +128,8 @@ void Motor_X_config()
     TMC_Add(&Motor_X_Controller);
 
     // set step generator parameters
-    TMC_Set_Acceleration(&Motor_X_Controller, 130000);
-    TMC_Set_MAX_velocity(&Motor_X_Controller, 130000);
+    TMC_Set_Acceleration(&Motor_X_Controller, 100000);
+    TMC_Set_MAX_velocity(&Motor_X_Controller, 100000);
 
     // enable stall and set minimum velocity for stall activation
     TMC_Enable_Stall(&Motor_X_Controller, 100000);
